@@ -65,7 +65,18 @@ st.markdown("""
 @st.cache_resource
 def load_recommender():
     data_path = Path(r"C:\Users\samuel\Desktop\smart information\Enhanced_Ecommerce_Dataset.csv")
-    return ProductRecommender(str(data_path)), pd.read_csv(data_path)
+    # Try different encodings
+    try:
+        df = pd.read_csv(data_path, encoding='latin-1')
+    except:
+        df = pd.read_csv(data_path, encoding='cp1252')
+    
+    # Print columns for debugging
+    print("Columns in dataset:", list(df.columns))
+    print("\nFirst few rows:")
+    print(df.head())
+    
+    return ProductRecommender(str(data_path)), df
 
 recommender, df = load_recommender()
 
@@ -73,323 +84,127 @@ recommender, df = load_recommender()
 with st.sidebar:
     st.title("🛍️ Navigation")
     page = st.radio(
-        "Choose a page",
-        ["Product Explorer", "Recommendation Engine", "Analytics Dashboard", "Smart Product Recommendations"]
+        "Select a page:",
+        ["Product Explorer", "Recommendation Engine", "Analytics Dashboard"]
     )
-    
-    st.markdown("---")
-    st.markdown("### Filters")
-    
-    # Category filter
-    categories = ["All"] + sorted(df['category'].unique().tolist())
-    selected_category = st.selectbox("Select Category", categories)
-    
-    # Price range filter
-    price_range = st.slider(
-        "Price Range ($)",
-        min_value=float(df['price'].min()),
-        max_value=float(df['price'].max()),
-        value=(float(df['price'].min()), float(df['price'].max()))
-    )
-    
-    # Rating filter
-    min_rating = st.slider("Minimum Rating", 0.0, 5.0, 0.0, 0.5)
-
-# Apply filters
-filtered_df = df.copy()
-if selected_category != "All":
-    filtered_df = filtered_df[filtered_df['category'] == selected_category]
-filtered_df = filtered_df[
-    (filtered_df['price'] >= price_range[0]) &
-    (filtered_df['price'] <= price_range[1]) &
-    (filtered_df['avg_rating'] >= min_rating)
-]
 
 # Main content
 if page == "Product Explorer":
-    st.title("🔍 Product Explorer")
+    st.title("Product Explorer")
+    
+    # Filters
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        # Get categories safely
+        all_categories = recommender.get_categories()
+        categories = ["All Categories"] + all_categories if all_categories else ["All Categories"]
+        category = st.selectbox("Select Category", categories)
+    
+    with col2:
+        # Get price range safely
+        min_price = float(df['price'].min()) if 'price' in df.columns else 0.0
+        max_price = float(df['price'].max()) if 'price' in df.columns else 1000.0
+        price_range = st.slider(
+            "Price Range",
+            min_value=min_price,
+            max_value=max_price,
+            value=(min_price, max_price)
+        )
+    
+    with col3:
+        min_rating = st.slider(
+            "Minimum Rating",
+            min_value=0.0,
+            max_value=5.0,
+            value=0.0
+        )
     
     # Product metrics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown("""
-            <div class="metric-card">
-                <h3>Total Products</h3>
-                <h2>{}</h2>
-            </div>
-        """.format(len(filtered_df)), unsafe_allow_html=True)
+    st.subheader("Product Metrics")
+    metric1, metric2, metric3, metric4 = st.columns(4)
     
-    with col2:
-        st.markdown("""
-            <div class="metric-card">
-                <h3>Avg Price</h3>
-                <h2>${:.2f}</h2>
-            </div>
-        """.format(filtered_df['price'].mean()), unsafe_allow_html=True)
+    with metric1:
+        st.metric("Total Products", len(df))
     
-    with col3:
-        st.markdown("""
-            <div class="metric-card">
-                <h3>Avg Rating</h3>
-                <h2>⭐ {:.1f}</h2>
-            </div>
-        """.format(filtered_df['avg_rating'].mean()), unsafe_allow_html=True)
+    with metric2:
+        avg_price = df['price'].mean() if 'price' in df.columns else 0
+        st.metric("Average Price", f"${avg_price:.2f}")
     
-    with col4:
-        st.markdown("""
-            <div class="metric-card">
-                <h3>Categories</h3>
-                <h2>{}</h2>
-            </div>
-        """.format(filtered_df['category'].nunique()), unsafe_allow_html=True)
+    with metric3:
+        rating_col = next((col for col in df.columns if 'rating' in col.lower()), None)
+        avg_rating = df[rating_col].mean() if rating_col in df.columns else 0
+        st.metric("Average Rating", f"{avg_rating:.1f}")
     
-    st.markdown("### Product Distribution")
-    
-    # Interactive scatter plot
-    fig = px.scatter(
-        filtered_df,
-        x='price',
-        y='avg_rating',
-        size='total_ratings',
-        color='category',
-        hover_name='name',
-        title='Price vs Rating Distribution',
-        template='plotly_white'
-    )
-    fig.update_layout(
-        plot_bgcolor='white',
-        height=500
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Product table
-    st.markdown("### Product List")
-    st.dataframe(
-        filtered_df[['name', 'category', 'price', 'avg_rating', 'total_ratings']],
-        use_container_width=True
-    )
+    with metric4:
+        if 'category' in df.columns:
+            category_count = len(set(df['category'].dropna()))
+            st.metric("Categories", category_count)
+        else:
+            st.metric("Categories", 0)
 
 elif page == "Recommendation Engine":
-    st.title("🎯 Recommendation Engine")
+    st.title("Product Recommendations")
     
     # Product selection
-    selected_product = st.selectbox(
-        "Select a product to get recommendations",
-        filtered_df['name'].tolist()
-    )
-    
-    if selected_product:
-        # Get recommendations
-        recommendations = recommender.get_recommendations(selected_product)
-        rec_df = pd.DataFrame(recommendations)
+    product_names = recommender.get_all_product_names()
+    if product_names:
+        selected_product = st.selectbox("Select a product:", product_names)
         
-        # Display selected product details
-        product = filtered_df[filtered_df['name'] == selected_product].iloc[0]
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Selected Product")
-            st.markdown(f"""
-                <div class="metric-card">
-                    <h3>{product['name']}</h3>
-                    <p>Category: {product['category']}</p>
-                    <p>Price: ${product['price']:.2f}</p>
-                    <p>Rating: {'⭐' * int(product['avg_rating'])} ({product['avg_rating']:.1f})</p>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            # Similarity visualization
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=recommendations[0]['similarity'] * 100,
-                title={'text': "Top Recommendation Similarity"},
-                gauge={'axis': {'range': [0, 100]},
-                       'bar': {'color': "#4A90E2"},
-                       'steps': [
-                           {'range': [0, 33], 'color': "#FF9999"},
-                           {'range': [33, 66], 'color': "#FFD700"},
-                           {'range': [66, 100], 'color': "#90EE90"}
-                       ]}
-            ))
-            st.plotly_chart(fig)
-        
-        # Display recommendations
-        st.markdown("### Recommended Products")
-        for i, rec in enumerate(recommendations[:5]):
-            st.markdown(f"""
-                <div class="metric-card">
-                    <h4>{i+1}. {rec['name']}</h4>
-                    <p>Similarity: {rec['similarity']*100:.1f}%</p>
-                    <p>Category: {rec['category']}</p>
-                    <p>Price: ${rec['price']:.2f}</p>
-                    <p>Rating: {'⭐' * int(rec['avg_rating'])} ({rec['avg_rating']:.1f})</p>
-                </div>
-            """, unsafe_allow_html=True)
-
-elif page == "Analytics Dashboard":
-    st.title("📊 Analytics Dashboard")
-    
-    # Category distribution
-    st.markdown("### Category Distribution")
-    cat_dist = filtered_df['category'].value_counts()
-    fig = px.pie(
-        values=cat_dist.values,
-        names=cat_dist.index,
-        title='Products by Category',
-        template='plotly_white',
-        hole=0.4
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Price distribution
-    st.markdown("### Price Distribution")
-    fig = px.histogram(
-        filtered_df,
-        x='price',
-        nbins=30,
-        title='Price Distribution',
-        template='plotly_white',
-        color_discrete_sequence=['#4A90E2']
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Rating analysis
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("### Rating Distribution")
-        fig = px.box(
-            filtered_df,
-            y='avg_rating',
-            x='category',
-            title='Ratings by Category',
-            template='plotly_white'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        st.markdown("### Price vs Ratings")
-        fig = px.density_heatmap(
-            filtered_df,
-            x='price',
-            y='avg_rating',
-            title='Price vs Rating Density',
-            template='plotly_white'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Top rated products
-    st.markdown("### Top Rated Products")
-    top_rated = filtered_df.nlargest(10, 'avg_rating')[
-        ['name', 'category', 'price', 'avg_rating', 'total_ratings']
-    ]
-    st.dataframe(top_rated, use_container_width=True)
-
-else:  # Smart Product Recommendations
-    st.title("🛍️ Smart Product Recommendations")
-    st.markdown("""
-    This dashboard helps you discover similar products based on user behavior and item similarity.
-    Search for products, filter by category, and rate them to get personalized recommendations!
-    """)
-    
-    # Create three columns for layout
-    col1, col2, col3 = st.columns([1, 1.5, 1])
-    
-    with col1:
-        st.subheader("Find Products")
-        
-        # Add search box
-        search_term = st.text_input("🔍 Search products", "")
-        
-        # Add category filter
-        categories = ["All Categories"] + recommender.get_categories()
-        selected_category = st.selectbox("📁 Filter by category", categories)
-        
-        # Get filtered product list
-        all_products = recommender.get_all_product_names()
-        filtered_products = recommender.filter_products(all_products, search_term, selected_category)
-        
-        if not filtered_products:
-            st.warning("No products found matching your criteria.")
-        else:
-            selected_product = st.selectbox(
-                "Choose a product:",
-                options=filtered_products
-            )
-            
-            if selected_product:
-                # Show product details
-                product_details = recommender.get_product_details(selected_product)
-                with st.expander("Product Details", expanded=True):
-                    st.markdown(f"""
-                    **Category:** {product_details['category']}
-                    **Average Rating:** {'⭐' * int(product_details['avg_rating'])} ({product_details['avg_rating']:.1f})
-                    **Total Ratings:** {product_details['total_ratings']}
-                    """)
-                
-                # Add rating section
-                st.subheader("Rate this Product")
-                rating = st.slider(
-                    "Rate from 1 to 5 stars:",
-                    min_value=1,
-                    max_value=5,
-                    value=3,
-                    step=1
-                )
-                
-                if st.button("Submit Rating"):
-                    product_id = recommender.get_product_id_by_name(selected_product)
-                    try:
-                        recommender.add_rating(
-                            st.session_state.user_id,
-                            product_id,
-                            rating
-                        )
-                        st.success(f"Thanks for rating {selected_product}!")
-                    except Exception as e:
-                        st.error(f"Error submitting rating: {str(e)}")
-    
         if selected_product:
-            # Get product ID from name
-            product_id = recommender.get_product_id_by_name(selected_product)
+            # Display product details
+            product_details = recommender.get_product_details(selected_product)
             
-            if product_id:
-                # Get similar products
-                similar_products = recommender.get_similar_products(product_id)
-                
+            if product_details:
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Category", product_details.get('category', 'Unknown'))
                 with col2:
-                    st.subheader("Recommended Similar Products")
-                    
-                    # Display recommendations in a nice format
-                    for i, (product_name, similarity) in enumerate(similar_products, 1):
+                    st.metric("Price", f"${product_details.get('price', 0):.2f}")
+                with col3:
+                    st.metric("Rating", f"{product_details.get('avg_rating', 0):.1f}")
+                
+                # Get and display recommendations
+                recommendations = recommender.get_recommendations(selected_product)
+                
+                if recommendations:
+                    st.subheader("Similar Products")
+                    for rec in recommendations:
                         with st.container():
-                            product_details = recommender.get_product_details(product_name)
-                            st.markdown(f"""
-                            #### {i}. {product_name}
-                            **Category:** {product_details['category']}
-                            **Average Rating:** {'⭐' * int(product_details['avg_rating'])} ({product_details['avg_rating']:.1f})
-                            **Similarity Score:** {similarity:.2f}
-                            """)
-                            st.divider()
+                            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+                            with col1:
+                                st.write(rec['name'])
+                            with col2:
+                                st.write(f"Category: {rec['category']}")
+                            with col3:
+                                st.write(f"Price: ${rec['price']:.2f}")
+                            with col4:
+                                st.write(f"{rec['similarity']:.2%} match")
+                else:
+                    st.info("No recommendations found for this product.")
+            else:
+                st.error("Could not find product details.")
+    else:
+        st.error("No products found in the dataset.")
+
+else:  # Analytics Dashboard
+    st.title("Analytics Dashboard")
     
-    with col3:
-        st.subheader("Your Ratings")
-        user_ratings = recommender.get_user_ratings(st.session_state.user_id)
-        
-        if user_ratings:
-            # Group ratings by category
-            ratings_by_category = {}
-            for product_name, rating in user_ratings:
-                category = recommender.get_product_category(product_name)
-                if category not in ratings_by_category:
-                    ratings_by_category[category] = []
-                ratings_by_category[category].append((product_name, rating))
-            
-            # Display ratings grouped by category
-            for category in sorted(ratings_by_category.keys()):
-                with st.expander(f"📁 {category}", expanded=True):
-                    for product_name, rating in ratings_by_category[category]:
-                        st.markdown(f"**{product_name}**: {'⭐' * int(rating)}")
-        else:
-            st.info("You haven't rated any products yet.")
+    # Category Distribution
+    if 'category' in df.columns:
+        st.subheader("Category Distribution")
+        category_counts = df['category'].value_counts()
+        fig = px.pie(values=category_counts.values, names=category_counts.index)
+        st.plotly_chart(fig)
+    
+    # Price Distribution
+    if 'price' in df.columns:
+        st.subheader("Price Distribution")
+        fig = px.histogram(df, x='price', nbins=50)
+        st.plotly_chart(fig)
+    
+    # Rating Analysis
+    rating_col = next((col for col in df.columns if 'rating' in col.lower()), None)
+    if rating_col and 'category' in df.columns:
+        st.subheader("Rating Analysis")
+        fig = px.box(df, x='category', y=rating_col)
+        st.plotly_chart(fig)
