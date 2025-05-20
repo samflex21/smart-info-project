@@ -22,55 +22,62 @@ class ProductRecommender:
         except:
             self.data = pd.read_csv(self.data_path, encoding='cp1252')
         
-        # Print the columns and first few rows for debugging
-        print("Columns in dataset:", list(self.data.columns))
-        print("\nFirst few rows:")
-        print(self.data.head())
+        # Print original dataset size
+        print(f"Original dataset size: {len(self.data)} products")
         
-        # Ensure required columns exist
-        required_columns = ['price', 'category', 'product_name']
-        if not all(col.lower() in [c.lower() for c in self.data.columns] for col in required_columns):
-            # If columns don't match, try to map similar column names
-            column_mapping = {}
-            for col in self.data.columns:
-                col_lower = col.lower()
-                if 'price' in col_lower:
-                    column_mapping[col] = 'price'
-                elif 'category' in col_lower:
-                    column_mapping[col] = 'category'
-                elif 'name' in col_lower or 'product' in col_lower:
-                    column_mapping[col] = 'product_name'
-            
-            # Rename columns if mapping exists
-            if column_mapping:
-                self.data = self.data.rename(columns=column_mapping)
+        # Filter products that have image URLs
+        self.data = self.data[self.data['Product Image URL'].notna()]
+        print(f"Products with images: {len(self.data)}")
         
-        # Ensure numeric columns
-        if 'price' in self.data.columns:
-            self.data['price'] = pd.to_numeric(self.data['price'], errors='coerce')
+        # Sort by rating and sales to get the most popular products
+        self.data['popularity_score'] = self.data['Rating'].fillna(0) * self.data['Sales'].fillna(0)
+        self.data = self.data.nlargest(100, 'popularity_score')
+        print(f"Final dataset size (top 100 popular products): {len(self.data)}")
         
+        # Reset index after filtering
+        self.data = self.data.reset_index(drop=True)
+        
+        # Print sample of selected products
+        print("\nSample of selected products:")
+        sample_cols = ['Product', 'Category', 'Sales', 'Rating', 'Product Image URL']
+        print(self.data[sample_cols].head())
+        
+        # Calculate similarity matrix for this smaller dataset
         self._update_similarity_matrix()
 
     def _update_similarity_matrix(self):
         """Update the similarity matrix based on product features."""
-        # Select available numeric features
-        numeric_features = self.data.select_dtypes(include=['int64', 'float64']).columns
-        feature_cols = [col for col in numeric_features if col != 'id']  # exclude ID column if present
+        # Select features for similarity calculation
+        numeric_features = ['Sales', 'Rating']
+        categorical_features = ['Category']
         
-        if len(feature_cols) == 0:
-            # If no numeric features found, create a simple feature
-            self.data['feature'] = 1
-            feature_cols = ['feature']
+        # Prepare feature matrix
+        feature_matrix = []
         
-        # Create feature matrix
-        feature_matrix = self.data[feature_cols].fillna(0)
+        # Add normalized numeric features
+        for feat in numeric_features:
+            if feat in self.data.columns:
+                values = self.data[feat].fillna(0)
+                # Normalize to 0-1 range
+                min_val = values.min()
+                max_val = values.max()
+                if max_val > min_val:
+                    normalized = (values - min_val) / (max_val - min_val)
+                    feature_matrix.append(normalized)
         
-        # Standardize features
-        scaler = StandardScaler()
-        scaled_features = scaler.fit_transform(feature_matrix)
+        # Add one-hot encoded categorical features
+        for feat in categorical_features:
+            if feat in self.data.columns:
+                dummies = pd.get_dummies(self.data[feat], prefix=feat)
+                feature_matrix.extend([dummies[col] for col in dummies.columns])
         
-        # Calculate similarity matrix
-        self.similarity_matrix = cosine_similarity(scaled_features)
+        # Convert to numpy array and calculate similarity
+        if feature_matrix:
+            features = np.vstack(feature_matrix).T
+            self.similarity_matrix = cosine_similarity(features)
+        else:
+            # Fallback to simple similarity
+            self.similarity_matrix = np.eye(len(self.data))
 
     def add_rating(self, user_id: str, product_id: str, rating: float):
         """Add a new user rating."""
@@ -121,9 +128,11 @@ class ProductRecommender:
                 product = self.data.iloc[idx]
                 recommendations.append({
                     'name': product[product_col],
-                    'category': product.get('category', 'Unknown'),
-                    'price': product.get('price', 0),
-                    'similarity': score
+                    'category': product.get('Category', 'Unknown'),
+                    'price': product.get('Sales', 0),
+                    'similarity': score,
+                    'image_url': product.get('Product Image URL', ''),
+                    'rating': product.get('Rating', 0)
                 })
             
             return recommendations
@@ -169,19 +178,17 @@ class ProductRecommender:
     
     def get_product_details(self, product_name):
         """Get details for a specific product."""
-        # Find the product name column
-        name_columns = [col for col in self.data.columns if 'name' in col.lower() or 'product' in col.lower()]
-        if not name_columns:
-            return None
-        product_col = name_columns[0]
-        
         try:
+            # Find product name column
+            product_col = [col for col in self.data.columns if 'name' in col.lower() or 'product' in col.lower()][0]
             product = self.data[self.data[product_col] == product_name].iloc[0]
+            
             return {
                 'category': product.get('category', 'Unknown'),
-                'price': float(product.get('price', 0)),
-                'avg_rating': float(product.get('rating', 0)),
-                'total_ratings': int(product.get('total_ratings', 0))
+                'price': product.get('Sales', 0),  # Using Sales column for price
+                'avg_rating': product.get('Rating', 0),
+                'image_url': product.get('Product Image URL', '')
             }
-        except (IndexError, KeyError):
+        except (IndexError, KeyError) as e:
+            print(f"Error getting product details: {str(e)}")
             return None

@@ -58,153 +58,164 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin: 10px 0;
     }
+    
+    div.product-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin: 10px 0;
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+    }
+    div.product-image {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    div.product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .price { color: #B12704; font-weight: bold; font-size: 1.2em; }
+    .rating { color: #FFA41C; }
+    .category { color: #565959; font-size: 0.9em; }
+    .product-title {
+        margin-top: 1rem;
+        min-height: 3em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+import re
+from urllib.parse import urlparse
+
+def is_valid_url(url):
+    """Check if a URL is valid and points to an image."""
+    try:
+        # Check if it's a string
+        if not isinstance(url, str):
+            return False
+            
+        # Check if it's a valid URL format
+        result = urlparse(url)
+        if not all([result.scheme, result.netloc]):
+            return False
+            
+        # Check if it points to an image
+        image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.webp')
+        return any(url.lower().endswith(ext) for ext in image_extensions)
+    except:
+        return False
 
 # Initialize recommender
 @st.cache_resource
 def load_recommender():
-    data_path = Path(r"C:\Users\samuel\Desktop\smart information\Enhanced_Ecommerce_Dataset.csv")
-    # Try different encodings
+    project_root = Path(__file__).parent.parent
+    data_path = project_root / "Enhanced_Ecommerce_Dataset.csv"
     try:
         df = pd.read_csv(data_path, encoding='latin-1')
     except:
         df = pd.read_csv(data_path, encoding='cp1252')
     
-    # Print columns for debugging
-    print("Columns in dataset:", list(df.columns))
-    print("\nFirst few rows:")
-    print(df.head())
-    
+    # Filter products with valid image URLs and sort by rating
+    df = df[df['Product Image URL'].notna()]
+    df['has_valid_image'] = df['Product Image URL'].apply(is_valid_url)
+    df = df[df['has_valid_image']]
+    df = df.nlargest(100, 'Rating')
     return ProductRecommender(str(data_path)), df
 
 recommender, df = load_recommender()
 
-# Sidebar
-with st.sidebar:
-    st.title("🛍️ Navigation")
-    page = st.radio(
-        "Select a page:",
-        ["Product Explorer", "Recommendation Engine", "Analytics Dashboard"]
-    )
+# Title
+st.title("🛍️ Smart Shopping")
 
-# Main content
-if page == "Product Explorer":
-    st.title("Product Explorer")
-    
-    # Filters
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        # Get categories safely
-        all_categories = recommender.get_categories()
-        categories = ["All Categories"] + all_categories if all_categories else ["All Categories"]
-        category = st.selectbox("Select Category", categories)
-    
-    with col2:
-        # Get price range safely
-        min_price = float(df['price'].min()) if 'price' in df.columns else 0.0
-        max_price = float(df['price'].max()) if 'price' in df.columns else 1000.0
-        price_range = st.slider(
-            "Price Range",
-            min_value=min_price,
-            max_value=max_price,
-            value=(min_price, max_price)
-        )
-    
-    with col3:
-        min_rating = st.slider(
-            "Minimum Rating",
-            min_value=0.0,
-            max_value=5.0,
-            value=0.0
-        )
-    
-    # Product metrics
-    st.subheader("Product Metrics")
-    metric1, metric2, metric3, metric4 = st.columns(4)
-    
-    with metric1:
-        st.metric("Total Products", len(df))
-    
-    with metric2:
-        avg_price = df['price'].mean() if 'price' in df.columns else 0
-        st.metric("Average Price", f"${avg_price:.2f}")
-    
-    with metric3:
-        rating_col = next((col for col in df.columns if 'rating' in col.lower()), None)
-        avg_rating = df[rating_col].mean() if rating_col in df.columns else 0
-        st.metric("Average Rating", f"{avg_rating:.1f}")
-    
-    with metric4:
-        if 'category' in df.columns:
-            category_count = len(set(df['category'].dropna()))
-            st.metric("Categories", category_count)
-        else:
-            st.metric("Categories", 0)
+# Sidebar filters
+st.sidebar.title("Filters")
 
-elif page == "Recommendation Engine":
-    st.title("Product Recommendations")
-    
-    # Product selection
-    product_names = recommender.get_all_product_names()
-    if product_names:
-        selected_product = st.selectbox("Select a product:", product_names)
-        
-        if selected_product:
-            # Display product details
-            product_details = recommender.get_product_details(selected_product)
-            
-            if product_details:
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Category", product_details.get('category', 'Unknown'))
-                with col2:
-                    st.metric("Price", f"${product_details.get('price', 0):.2f}")
-                with col3:
-                    st.metric("Rating", f"{product_details.get('avg_rating', 0):.1f}")
-                
-                # Get and display recommendations
-                recommendations = recommender.get_recommendations(selected_product)
-                
-                if recommendations:
-                    st.subheader("Similar Products")
-                    for rec in recommendations:
-                        with st.container():
-                            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
-                            with col1:
-                                st.write(rec['name'])
-                            with col2:
-                                st.write(f"Category: {rec['category']}")
-                            with col3:
-                                st.write(f"Price: ${rec['price']:.2f}")
-                            with col4:
-                                st.write(f"{rec['similarity']:.2%} match")
-                else:
-                    st.info("No recommendations found for this product.")
-            else:
-                st.error("Could not find product details.")
-    else:
-        st.error("No products found in the dataset.")
+# Category filter
+categories = ['All'] + sorted(df['Category'].unique().tolist())
+selected_category = st.sidebar.selectbox("Category", categories)
 
-else:  # Analytics Dashboard
-    st.title("Analytics Dashboard")
-    
-    # Category Distribution
-    if 'category' in df.columns:
-        st.subheader("Category Distribution")
-        category_counts = df['category'].value_counts()
-        fig = px.pie(values=category_counts.values, names=category_counts.index)
-        st.plotly_chart(fig)
-    
-    # Price Distribution
-    if 'price' in df.columns:
-        st.subheader("Price Distribution")
-        fig = px.histogram(df, x='price', nbins=50)
-        st.plotly_chart(fig)
-    
-    # Rating Analysis
-    rating_col = next((col for col in df.columns if 'rating' in col.lower()), None)
-    if rating_col and 'category' in df.columns:
-        st.subheader("Rating Analysis")
-        fig = px.box(df, x='category', y=rating_col)
-        st.plotly_chart(fig)
+# Rating filter
+min_rating = st.sidebar.slider("Minimum Rating", 0.0, 5.0, 4.0, 0.5)
+
+# Sort options
+sort_by = st.sidebar.selectbox(
+    "Sort by",
+    ["Rating (High to Low)", "Price (Low to High)", "Price (High to Low)"]
+)
+
+# Filter products
+filtered_data = df.copy()
+if selected_category != 'All':
+    filtered_data = filtered_data[filtered_data['Category'] == selected_category]
+filtered_data = filtered_data[filtered_data['Rating'] >= min_rating]
+
+# Sort data
+if sort_by == "Rating (High to Low)":
+    filtered_data = filtered_data.sort_values('Rating', ascending=False)
+elif sort_by == "Price (Low to High)":
+    filtered_data = filtered_data.sort_values('Sales', ascending=True)
+else:
+    filtered_data = filtered_data.sort_values('Sales', ascending=False)
+
+# Display products in a grid
+st.subheader(f"Top Rated Products {f'in {selected_category}' if selected_category != 'All' else ''}")
+
+# Create rows of 3 products each
+for i in range(0, len(filtered_data), 3):
+    cols = st.columns(3)
+    for j in range(3):
+        if i + j < len(filtered_data):
+            product = filtered_data.iloc[i + j]
+            with cols[j]:
+                with st.container():
+                    st.markdown('<div class="product-card">', unsafe_allow_html=True)
+                    
+                    # Product image container
+                    st.markdown('<div class="product-image">', unsafe_allow_html=True)
+                    try:
+                        if pd.notna(product['Product Image URL']) and is_valid_url(product['Product Image URL']):
+                            st.image(product['Product Image URL'])
+                        else:
+                            st.image("https://via.placeholder.com/200x200?text=No+Image")
+                    except Exception as e:
+                        st.image("https://via.placeholder.com/200x200?text=Image+Error")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Product title with consistent height
+                    st.markdown(f'<div class="product-title">**{product["Product"]}**</div>', unsafe_allow_html=True)
+                    
+                    # Product details
+                    st.markdown(f"<p class='price'>${product['Sales']:.2f}</p>", unsafe_allow_html=True)
+                    
+                    # Rating with stars
+                    stars = "⭐" * int(product['Rating'])
+                    if product['Rating'] % 1 >= 0.5:
+                        stars += "½"
+                    st.markdown(f"<p class='rating'>{stars} ({product['Rating']:.1f})</p>", unsafe_allow_html=True)
+                    
+                    # Category
+                    st.markdown(f"<p class='category'>{product['Category']}</p>", unsafe_allow_html=True)
+                    
+                    # Show similar products in an expander
+                    with st.expander("Show Similar Products"):
+                        recommendations = recommender.get_recommendations(product['Product'], n=3)
+                        for rec in recommendations:
+                            st.write(f"• {rec['name']}")
+                            st.write(f"  ${rec['price']:.2f} | ⭐{rec['rating']:.1f}")
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+
