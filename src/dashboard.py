@@ -70,8 +70,8 @@ st.markdown("""
         flex-direction: column;
     }
     div.product-image {
-        width: 200px;
-        height: 200px;
+        width: 180px;
+        height: 180px;
         margin: 0 auto;
         display: flex;
         align-items: center;
@@ -82,6 +82,23 @@ st.markdown("""
         width: 100%;
         height: 100%;
         object-fit: contain;
+        max-width: 180px;
+        max-height: 180px;
+    }
+    
+    .recommended-section {
+        background-color: #f8f1e5;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        border-left: 4px solid #F39C12;
+    }
+    
+    .recommended-title {
+        color: #F39C12;
+        font-size: 1.5em;
+        margin-bottom: 15px;
+        font-weight: bold;
     }
     .price { color: #B12704; font-weight: bold; font-size: 1.2em; }
     .rating { color: #FFA41C; }
@@ -170,6 +187,11 @@ if selected_country != 'All':
     filtered_data = filtered_data[filtered_data['Country'] == selected_country]
 filtered_data = filtered_data[filtered_data['Rating'] >= min_rating]
 
+# Create a separate dataframe for 5-star recommended products
+recommended_products = filtered_data[filtered_data['Rating'] == 5.0].copy()
+# Remove the recommended products from the main display to avoid duplication
+filtered_data = filtered_data[filtered_data['Rating'] < 5.0]
+
 # Sort data
 if sort_by == "Rating (High to Low)":
     filtered_data = filtered_data.sort_values('Rating', ascending=False)
@@ -187,14 +209,17 @@ elif selected_category != 'All':
 elif selected_country != 'All':
     filter_text = f"from {selected_country}"
 
-st.subheader(f"Top Rated Products {filter_text}")
+st.subheader(f"Products {filter_text}")
 
-# Create rows of 3 products each
-for i in range(0, len(filtered_data), 3):
+# Function to display a row of products
+def display_product_row(products, start_idx, section_id='normal', count=3):
+    if start_idx >= len(products):
+        return
+    
     cols = st.columns(3)
-    for j in range(3):
-        if i + j < len(filtered_data):
-            product = filtered_data.iloc[i + j]
+    for j in range(count):
+        if start_idx + j < len(products):
+            product = products.iloc[start_idx + j]
             with cols[j]:
                 with st.container():
                     st.markdown('<div class="product-card">', unsafe_allow_html=True)
@@ -205,36 +230,55 @@ for i in range(0, len(filtered_data), 3):
                         if pd.notna(product['Product Image URL']) and is_valid_url(product['Product Image URL']):
                             st.image(product['Product Image URL'])
                         else:
-                            st.image("https://via.placeholder.com/200x200?text=No+Image")
+                            st.image("https://via.placeholder.com/180x180?text=No+Image")
                     except Exception as e:
-                        st.image("https://via.placeholder.com/200x200?text=Image+Error")
+                        st.image("https://via.placeholder.com/180x180?text=Image+Error")
                     st.markdown('</div>', unsafe_allow_html=True)
                     
                     # Product title with consistent height
                     st.markdown(f'<div class="product-title">**{product["Product"]}**</div>', unsafe_allow_html=True)
                     
-                    # Product details
-                    st.markdown(f"<p class='price'>${product['Sales']:.2f}</p>", unsafe_allow_html=True)
+                    # Price and category
+                    st.markdown(f'<span class="price">${product["Sales"]:.2f}</span>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="category">{product["Category"]} | {product["Country"]}</div>', unsafe_allow_html=True)
                     
-                    # Rating with stars
-                    stars = "⭐" * int(product['Rating'])
-                    if product['Rating'] % 1 >= 0.5:
-                        stars += "½"
-                    st.markdown(f"<p class='rating'>{stars} ({product['Rating']:.1f})</p>", unsafe_allow_html=True)
+                    # Rating as stars
+                    rating = int(product["Rating"])
+                    st.markdown(f'<div class="rating">{"★" * rating}{"☆" * (5-rating)}</div>', unsafe_allow_html=True)
                     
-                    # Category
-                    st.markdown(f"<p class='category'>{product['Category']}</p>", unsafe_allow_html=True)
+                    # Generate a unique key for each button by combining section_id, row index, and column position
+                    unique_button_key = f"{section_id}_{start_idx}_{j}_{product['Product ID']}"
                     
-                    # Button to view recommendations for this product
-                    if st.button(f"Show recommendations for this product", key=f"btn_{i}_{j}"):
-                        st.session_state['selected_product'] = product['Product']
-                        st.experimental_rerun()
+                    # View details button
+                    if st.button(f"View Details", key=unique_button_key):
+                        st.session_state['selected_product'] = product["Product"]
                     
                     st.markdown('</div>', unsafe_allow_html=True)
 
-# Top-Rated Recommendations Section
-st.markdown("---")
-st.header("🌟 Top-Rated Recommended Products")
+# Display products in alternating pattern (2 rows normal, 1 row recommended)
+row = 0
+normal_product_index = 0
+recommended_product_index = 0
+
+# Calculate total number of rows needed
+total_normal_rows = (len(filtered_data) + 2) // 3  # Ceiling division
+total_recommended_rows = max(1, (len(recommended_products) + 2) // 3)
+
+while normal_product_index < len(filtered_data) or recommended_product_index < len(recommended_products):
+    # Display 2 rows of normal products
+    for row_num in range(2):
+        if normal_product_index < len(filtered_data):
+            display_product_row(filtered_data, normal_product_index, section_id=f"normal_{row}_{row_num}")
+            normal_product_index += 3
+    
+    # Display recommended products if available
+    if recommended_product_index < len(recommended_products):
+        st.markdown('<div class="recommended-section">', unsafe_allow_html=True)
+        st.markdown('<div class="recommended-title">⭐ Top Rated Recommended Products ⭐</div>', unsafe_allow_html=True)
+        display_product_row(recommended_products, recommended_product_index, section_id=f"recommended_{row}")
+        st.markdown('</div>', unsafe_allow_html=True)
+        recommended_product_index += 3
+    row += 1
 
 # Get top-rated products
 top_products = df.nlargest(4, 'Rating')
