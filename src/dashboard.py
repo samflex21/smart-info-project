@@ -156,6 +156,8 @@ sort_by = st.sidebar.selectbox(
     ["Rating (High to Low)", "Price (Low to High)", "Price (High to Low)"]
 )
 
+# No need for sidebar recommendations selector
+
 # Filter products
 filtered_data = df.copy()
 if selected_category != 'All':
@@ -209,13 +211,107 @@ for i in range(0, len(filtered_data), 3):
                     # Category
                     st.markdown(f"<p class='category'>{product['Category']}</p>", unsafe_allow_html=True)
                     
-                    # Show similar products in an expander
-                    with st.expander("Show Similar Products"):
-                        recommendations = recommender.get_recommendations(product['Product'], n=3)
-                        for rec in recommendations:
-                            st.write(f"• {rec['name']}")
-                            st.write(f"  ${rec['price']:.2f} | ⭐{rec['rating']:.1f}")
+                    # Button to view recommendations for this product
+                    if st.button(f"Show recommendations for this product", key=f"btn_{i}_{j}"):
+                        st.session_state['selected_product'] = product['Product']
+                        st.experimental_rerun()
                     
                     st.markdown('</div>', unsafe_allow_html=True)
 
+# Top-Rated Recommendations Section
+st.markdown("---")
+st.header("🌟 Top-Rated Recommended Products")
 
+# Get top-rated products
+top_products = df.nlargest(4, 'Rating')
+
+# Display recommendations in a grid (1 row of 4)
+cols = st.columns(4)
+for i in range(min(4, len(top_products))):
+    product = top_products.iloc[i]
+    with cols[i]:
+        with st.container():
+            st.markdown('<div class="product-card">', unsafe_allow_html=True)
+            
+            # Product image container
+            st.markdown('<div class="product-image">', unsafe_allow_html=True)
+            try:
+                if pd.notna(product['Product Image URL']) and is_valid_url(product['Product Image URL']):
+                    st.image(product['Product Image URL'])
+                else:
+                    st.image("https://via.placeholder.com/200x200?text=No+Image")
+            except Exception as e:
+                st.image("https://via.placeholder.com/200x200?text=Image+Error")
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Product title
+            st.markdown(f'<div class="product-title">**{product["Product"]}**</div>', unsafe_allow_html=True)
+            
+            # Product details
+            st.markdown(f"<p class='price'>${product['Sales']:.2f}</p>", unsafe_allow_html=True)
+            
+            # Rating with stars
+            stars = "⭐" * int(product['Rating'])
+            if product['Rating'] % 1 >= 0.5:
+                stars += "½"
+            st.markdown(f"<p class='rating'>{stars} ({product['Rating']:.1f})</p>", unsafe_allow_html=True)
+            
+            # Category
+            st.markdown(f"<p class='category'>{product['Category']}</p>", unsafe_allow_html=True)
+            
+            # Recommendation button
+            if st.button(f"See similar products", key=f"rec_btn_{i}"):
+                st.session_state['selected_product'] = product['Product']
+                st.experimental_rerun()
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+
+# Initialize session state for selected product
+if 'selected_product' in st.session_state:
+    st.markdown("---")
+    st.header("🔍 Products Similar to: " + st.session_state['selected_product'])
+    
+    # Get similar products
+    similar_products = recommender.get_recommendations(st.session_state['selected_product'], n=4)
+    
+    if similar_products:
+        # Display similar products
+        sim_cols = st.columns(4)
+        for i in range(min(4, len(similar_products))):
+            rec = similar_products[i]
+            with sim_cols[i]:
+                with st.container():
+                    st.markdown('<div class="product-card">', unsafe_allow_html=True)
+                    
+                    # Product image container
+                    st.markdown('<div class="product-image">', unsafe_allow_html=True)
+                    try:
+                        if pd.notna(rec['image_url']) and is_valid_url(rec['image_url']):
+                            st.image(rec['image_url'])
+                        else:
+                            st.image("https://via.placeholder.com/200x200?text=No+Image")
+                    except Exception as e:
+                        st.image("https://via.placeholder.com/200x200?text=Image+Error")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Product title
+                    st.markdown(f'<div class="product-title">**{rec["name"]}**</div>', unsafe_allow_html=True)
+                    
+                    # Product details
+                    st.markdown(f"<p class='price'>${rec['price']:.2f}</p>", unsafe_allow_html=True)
+                    
+                    # Rating with stars
+                    stars = "⭐" * int(rec['rating'])
+                    if rec['rating'] % 1 >= 0.5:
+                        stars += "½"
+                    st.markdown(f"<p class='rating'>{stars} ({rec['rating']:.1f})</p>", unsafe_allow_html=True)
+                    
+                    # Category
+                    st.markdown(f"<p class='category'>{rec['category']}</p>", unsafe_allow_html=True)
+                    
+                    # Similarity score
+                    st.markdown(f"<p>Similarity: {rec['similarity']:.2f}</p>", unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.info("No similar products found.")
