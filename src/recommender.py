@@ -159,9 +159,15 @@ class ProductRecommender:
 
     def get_categories(self):
         """Get list of unique categories."""
-        if 'category' not in self.data.columns:
+        if 'Category' not in self.data.columns:
             return []
-        return sorted(list(set(self.data['category'].dropna())))
+        return sorted(list(self.data['Category'].dropna().unique()))
+        
+    def get_countries(self):
+        """Get list of unique countries."""
+        if 'Country' not in self.data.columns:
+            return []
+        return sorted(list(self.data['Country'].dropna().unique()))
     
     def get_product_category(self, product_name):
         """Get category for a given product name."""
@@ -172,7 +178,20 @@ class ProductRecommender:
         product_col = name_columns[0]
         
         try:
-            return self.data[self.data[product_col] == product_name]['category'].iloc[0]
+            return self.data[self.data[product_col] == product_name]['Category'].iloc[0]
+        except (KeyError, IndexError):
+            return "Unknown"
+            
+    def get_product_country(self, product_name):
+        """Get country for a given product name."""
+        # Find the product name column
+        name_columns = [col for col in self.data.columns if 'name' in col.lower() or 'product' in col.lower()]
+        if not name_columns:
+            return "Unknown"
+        product_col = name_columns[0]
+        
+        try:
+            return self.data[self.data[product_col] == product_name]['Country'].iloc[0]
         except (KeyError, IndexError):
             return "Unknown"
     
@@ -184,7 +203,8 @@ class ProductRecommender:
             product = self.data[self.data[product_col] == product_name].iloc[0]
             
             return {
-                'category': product.get('category', 'Unknown'),
+                'category': product.get('Category', 'Unknown'),
+                'country': product.get('Country', 'Unknown'),
                 'price': product.get('Sales', 0),  # Using Sales column for price
                 'avg_rating': product.get('Rating', 0),
                 'image_url': product.get('Product Image URL', '')

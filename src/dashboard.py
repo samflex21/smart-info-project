@@ -122,7 +122,7 @@ def is_valid_url(url):
 @st.cache_resource
 def load_recommender():
     project_root = Path(__file__).parent.parent
-    data_path = project_root / "Enhanced_Ecommerce_Dataset.csv"
+    data_path = project_root / "ecommerce dataset.csv"
     try:
         df = pd.read_csv(data_path, encoding='latin-1')
     except:
@@ -147,6 +147,10 @@ st.sidebar.title("Filters")
 categories = ['All'] + sorted(df['Category'].unique().tolist())
 selected_category = st.sidebar.selectbox("Category", categories)
 
+# Country filter
+countries = ['All'] + sorted(df['Country'].unique().tolist())
+selected_country = st.sidebar.selectbox("Country", countries)
+
 # Rating filter
 min_rating = st.sidebar.slider("Minimum Rating", 0.0, 5.0, 4.0, 0.5)
 
@@ -162,6 +166,8 @@ sort_by = st.sidebar.selectbox(
 filtered_data = df.copy()
 if selected_category != 'All':
     filtered_data = filtered_data[filtered_data['Category'] == selected_category]
+if selected_country != 'All':
+    filtered_data = filtered_data[filtered_data['Country'] == selected_country]
 filtered_data = filtered_data[filtered_data['Rating'] >= min_rating]
 
 # Sort data
@@ -173,7 +179,15 @@ else:
     filtered_data = filtered_data.sort_values('Sales', ascending=False)
 
 # Display products in a grid
-st.subheader(f"Top Rated Products {f'in {selected_category}' if selected_category != 'All' else ''}")
+filter_text = ""
+if selected_category != 'All' and selected_country != 'All':
+    filter_text = f"in {selected_category} from {selected_country}"
+elif selected_category != 'All':
+    filter_text = f"in {selected_category}"
+elif selected_country != 'All':
+    filter_text = f"from {selected_country}"
+
+st.subheader(f"Top Rated Products {filter_text}")
 
 # Create rows of 3 products each
 for i in range(0, len(filtered_data), 3):
