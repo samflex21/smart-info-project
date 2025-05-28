@@ -17,10 +17,23 @@ class ProductRecommender:
 
     def load_and_prepare_data(self):
         """Load and preprocess the product dataset."""
+        # Check if the data file exists
+        import os
+        if not os.path.exists(self.data_path):
+            print(f"Warning: Data file not found at {self.data_path}")
+            self.data = pd.DataFrame()  # Create empty DataFrame
+            return
+            
+        # Try to load with different encodings
         try:
             self.data = pd.read_csv(self.data_path, encoding='latin-1')
-        except:
-            self.data = pd.read_csv(self.data_path, encoding='cp1252')
+        except Exception as e1:
+            try:
+                self.data = pd.read_csv(self.data_path, encoding='cp1252')
+            except Exception as e2:
+                print(f"Error loading data: {e2}")
+                self.data = pd.DataFrame()  # Create empty DataFrame
+                return
         
         # Print original dataset size
         print(f"Original dataset size: {len(self.data)} products")
@@ -103,11 +116,21 @@ class ProductRecommender:
                 user_ratings.append((product_name, data['Rating']))
         return user_ratings
 
-    def get_recommendations(self, product_name, n=5):
-        """Get product recommendations based on similarity."""
+    def get_recommendations(self, product_name: str, n: int = 5) -> List[Dict]:
+        """Get N product recommendations similar to the given product."""
+        # Handle case where data is empty
+        if self.data is None or self.data.empty:
+            print("No data available for recommendations")
+            return []
+            
         try:
             # Find the index of the product
             product_col = [col for col in self.data.columns if 'name' in col.lower() or 'product' in col.lower()][0]
+            
+            if product_name not in self.data[product_col].values:
+                print(f"Product {product_name} not found in the dataset")
+                return []
+                
             idx = self.data[self.data[product_col] == product_name].index[0]
             
             # Get similarity scores
