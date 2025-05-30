@@ -4,6 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler
 from typing import List, Tuple, Dict
 import datetime
+from pathlib import Path
 
 class ProductRecommender:
     def __init__(self, data_path: str):
@@ -13,6 +14,19 @@ class ProductRecommender:
         self.similarity_matrix = None
         self.product_names = None
         self.user_ratings = {}  # Store new user ratings
+        possible_paths = [
+            Path(__file__).parent.parent / "ecommerce_dataset.csv",  # new cleaned dataset
+            Path("ecommerce_dataset.csv"),  # current directory
+            Path(__file__).parent / "ecommerce_dataset.csv",  # src directory
+            Path(__file__).parent.parent / "ecommerce_dataset_updated.csv",  # fallback to other updated
+            Path(__file__).parent.parent / "ecommerce dataset.csv",  # fallback to original
+            Path("ecommerce dataset.csv"),
+            Path(__file__).parent / "ecommerce dataset.csv"
+        ]
+        for path in possible_paths:
+            if path.exists():
+                self.data_path = path
+                break
         self.load_and_prepare_data()
 
     def load_and_prepare_data(self):
@@ -38,22 +52,49 @@ class ProductRecommender:
         # Print original dataset size
         print(f"Original dataset size: {len(self.data)} products")
         
-        # Filter products that have image URLs
-        self.data = self.data[self.data['Product Image URL'].notna()]
-        print(f"Products with images: {len(self.data)}")
+        # Keep track of original dataset size
+        original_size = len(self.data)
         
-        # Sort by rating and sales to get the most popular products
-        self.data['popularity_score'] = self.data['Rating'].fillna(0) * self.data['Sales'].fillna(0)
-        self.data = self.data.nlargest(100, 'popularity_score')
-        print(f"Final dataset size (top 100 popular products): {len(self.data)}")
+        # Handle missing image URLs with placeholder images instead of filtering them out
+        for index, row in self.data.iterrows():
+            if pd.isna(row['Product Image URL']) or not isinstance(row['Product Image URL'], str) or not row['Product Image URL'].strip():
+                category = row['Category']
+                if pd.isna(category):
+                    category = 'Product'
+                category_str = str(category).replace(' ', '+')
+                self.data.at[index, 'Product Image URL'] = f"https://via.placeholder.com/140x140?text={category_str}"
+        
+        print(f"Products with image URLs (including placeholders): {len(self.data)}")
+        
+        # Print counts by category
+        print("Products by category:")
+        print(self.data['Category'].value_counts())
+        
+        # Identify important categories for special handling
+        important_categories = ['Luxury Jewelry', 'Make up']
+        
+        # Print only summary information about important categories
+        for category in important_categories:
+            category_products = self.data[self.data['Category'] == category]
+            print(f"Found {len(category_products)} products in category '{category}'")
+        
+        # IMPORTANT: Use ALL products - no more limiting to 100
+        # This ensures all categories have their products displayed
+        print(f"Using all {len(self.data)} products from the dataset (no product limit)")
+        balanced_data = self.data.copy()
+        
+        # Update the data with our balanced selection
+        self.data = balanced_data.reset_index(drop=True)
+        
+        print(f"Final dataset size: {len(self.data)} products")
+        print("Final category distribution:")
+        print(self.data['Category'].value_counts())
         
         # Reset index after filtering
         self.data = self.data.reset_index(drop=True)
         
-        # Print sample of selected products
-        print("\nSample of selected products:")
-        sample_cols = ['Product', 'Category', 'Sales', 'Rating', 'Product Image URL']
-        print(self.data[sample_cols].head())
+        # Print only count of selected products to avoid encoding issues
+        print(f"\nFinal dataset has {len(self.data)} total products")
         
         # Calculate similarity matrix for this smaller dataset
         self._update_similarity_matrix()
