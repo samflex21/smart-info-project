@@ -323,13 +323,52 @@ if recommender is None or df.empty:
     st.error("No product data available. Please make sure 'ecommerce dataset.csv' is in the project directory.")
     st.stop()
 
-# Title
-st.title("🛍️ Smart Shopping")
+# Custom Header with logo and store name
+st.markdown("""
+<div style="background-color: #1E3A8A; padding: 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center;">
+        <div style="font-size: 42px; margin-right: 20px; color: gold;">🛍️</div>
+        <div>
+            <h1 style="color: gold; margin: 0; font-size: 36px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">S&N SMART STORE</h1>
+            <p style="color: #FFFFFF; margin: 0; font-size: 16px;">Quality products, smart choices</p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# Sidebar filters
-st.sidebar.title("Filters")
+# Compact but professional sidebar styling
+st.markdown("""
+<style>
+    /* Clean sidebar styling */
+    [data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+    }
+    
+    /* Reduced spacing for sidebar elements */
+    .sidebar .element-container {margin-bottom: 0.2rem !important;}
+    
+    /* Compact radio buttons */
+    div.row-widget.stRadio > div {flex-direction: column; gap: 1px !important;}
+    .stRadio [data-testid="stMarkdownContainer"] p {font-size: 0.9rem; margin: 0 !important; padding: 0 !important;}
+    
+    /* Compact header styling */
+    .sidebar .stSubheader {margin-top: 0.5rem !important; margin-bottom: 0.1rem !important; padding-bottom: 0 !important;}
+    
+    /* Title needs less margin */
+    .sidebar [data-testid="stTitle"] {margin-bottom: 0.2rem !important;}
+    
+    /* Thin dividers */
+    .sidebar hr {margin: 0.3rem 0 !important; border-color: #eee;}
+    
+    /* Make slider more compact */
+    .stSlider {margin: 0.2rem 0 !important; padding: 0 !important;}
+    
+    /* Selectbox more compact */
+    .stSelectbox {margin: 0 !important; padding: 0 !important;}
+</style>
+""", unsafe_allow_html=True)
 
-# Add category filter - manually include all categories to ensure they appear
+# Get all categories from the dataset
 all_category_values = list(df['Category'].unique())
 
 # Make sure these categories exist - direct user can filter by them
@@ -341,37 +380,65 @@ for cat in required_categories:
 # Create the full list with all required categories
 all_categories = ['All'] + sorted(set(all_category_values + required_categories))
 
-# Debug - print out all categories in dropdown
-print("Categories in dropdown:")
-for cat in all_categories:
-    print(f"  - {cat}")
+# Smaller sidebar title
+st.sidebar.markdown("<h3 style='margin: 0 0 0.3rem 0; padding:0; font-size:1.2rem;'>Filters</h3>", unsafe_allow_html=True)
 
-selected_category = st.sidebar.selectbox('Category', all_categories, 
-                                       help="Filter products by their category (Beauty, Jewelry, Home, etc)")
+# More compact category header
+st.sidebar.markdown("<p style='margin:0.3rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Category</p>", unsafe_allow_html=True)
+
+# Radio buttons for categories with proper accessibility
+selected_category = st.sidebar.radio(
+    "Category options",
+    all_categories,
+    index=0,  # Default to 'All'
+    key="category_radio",
+    label_visibility="collapsed"
+)
 
 # Define category-based color schemes
 category_colors = {
-    'Body care': {'primary': '#8EC5FC', 'secondary': '#E0C3FC', 'accent': '#6A82FB'},
-    'Face care': {'primary': '#FFDEE9', 'secondary': '#B5FFFC', 'accent': '#FF6A88'},
-    'Hair care': {'primary': '#D9AFD9', 'secondary': '#97D9E1', 'accent': '#8EC5FC'},
-    'Home and Accessories': {'primary': '#F3E7E9', 'secondary': '#E3EEFF', 'accent': '#96E6A1'},
-    'Luxury Jewelry': {'primary': '#FFD1FF', 'secondary': '#FAD0C4', 'accent': '#FFDEE9'},
+    'Body care': {'primary': '#AED9E0', 'secondary': '#B8F2E6', 'accent': '#5E6472'},
+    'Face care': {'primary': '#FAF3DD', 'secondary': '#FFA69E', 'accent': '#AA4465'},
+    'Hair care': {'primary': '#B8D8D8', 'secondary': '#7A9E9F', 'accent': '#4F6367'},
+    'Home and Accessories': {'primary': '#EAF2E3', 'secondary': '#61A0AF', 'accent': '#204E4A'},
+    'Luxury Jewelry': {'primary': '#F1E0C5', 'secondary': '#C8A951', 'accent': '#604D53'},
     'Make up': {'primary': '#FFC3A0', 'secondary': '#FFAFBD', 'accent': '#BB377D'}
 }
 
-# Country filter
-countries = ['All'] + sorted(df['Country'].unique().tolist())
-selected_country = st.sidebar.selectbox("Country", countries)
+# Compact country header
+st.sidebar.markdown("<p style='margin:0.3rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Country</p>", unsafe_allow_html=True)
 
-# Rating filter
-min_rating = st.sidebar.slider("Minimum Rating", 0.0, 5.0, 0.0, 0.5)
+# Get all countries from the dataset
+countries = ['All'] + sorted(df['Country'].unique().tolist())
+selected_country = st.sidebar.selectbox(
+    "Choose a country",
+    countries,
+    index=0,  # Default to 'All'
+    key="country_select",
+    label_visibility="collapsed"
+)
+
+# Compact divider and rating header
+st.sidebar.markdown("<hr style='margin:0.4rem 0 0.2rem 0; padding:0; border-color:#eee;'>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='margin:0.1rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Rating</p>", unsafe_allow_html=True)
+
+# Rating filter with proper label
+min_rating = st.sidebar.slider(
+    "Minimum star rating",
+    0.0, 5.0, 0.0, 0.5, 
+    format="%.1f★",
+    key="rating_slider",
+    label_visibility="collapsed"
+)
 filter_by_rating = min_rating > 0
 
-# Sort options
-sort_by = st.sidebar.selectbox(
-    "Sort by",
-    ["Rating (High to Low)", "Price (Low to High)", "Price (High to Low)"]
-)
+# Compact divider and sort header
+st.sidebar.markdown("<hr style='margin:0.4rem 0 0.2rem 0; padding:0; border-color:#eee;'>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='margin:0.1rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Sort By</p>", unsafe_allow_html=True)
+
+# Sort options with proper label
+sort_options = ["Rating (High to Low)", "Price (Low to High)", "Price (High to Low)"]
+sort_by = st.sidebar.radio("Sort options", sort_options, index=0, key="sort_radio", label_visibility="collapsed")
 
 # No need for sidebar recommendations selector
 
@@ -417,7 +484,7 @@ elif selected_category != 'All':
 elif selected_country != 'All':
     filter_text = f"from {selected_country}"
 
-st.subheader(f"Products {filter_text}")
+# This subheader is now handled in the product display sections below
 
 # Function to display a row of products using Streamlit-friendly approach
 def display_product_row(products, start_idx, section_id='normal', count=3):
@@ -484,15 +551,78 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
 
 
 if len(filtered_data) > 0:
-    st.subheader("Products")
+    # Show the top rated products section first
+    st.markdown("""
+    <div style='margin-top: 20px; margin-bottom: 30px; 
+    background-color: #f8f1e5; padding: 15px; 
+    border-radius: 10px; border-left: 4px solid #F39C12;'>
+    <h3 style='color: #F39C12;'>⭐ Top Rated Products</h3>
+    <p>Products our customers love the most</p>
+    </div>""", unsafe_allow_html=True)
     
-    # Display products in a simple grid using Streamlit columns
+    # Get top 3 highest rated products from entire dataset
+    top_rated = df.sort_values(by='Rating', ascending=False).head(3).reset_index(drop=True)
+    
+    # Create columns for top rated products
+    top_cols = st.columns(3)
+    
+    # Display top rated products
+    for top_col in range(min(len(top_rated), 3)):
+        product = top_rated.iloc[top_col]
+        
+        # Display product in this column
+        with top_cols[top_col]:
+            # Get category-specific colors for styling
+            category = product.get('Category', 'Uncategorized')
+            colors = category_colors.get(category, {'primary': '#fff8ec', 'secondary': '#f8f1e5', 'accent': '#F39C12'})
+            
+            # Create card with special styling for top rated products
+            st.markdown(f'<div style="background-color: {colors["primary"]}; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; border-left: 4px solid {colors["accent"]}; border-top: 2px solid gold;">', unsafe_allow_html=True)
+            
+            # Add a top rated badge
+            st.markdown('<div style="position: absolute; top: 5px; right: 5px; background-color: gold; color: #333; padding: 3px 8px; border-radius: 10px; font-size: 0.7em; font-weight: bold;">TOP RATED</div>', unsafe_allow_html=True)
+            
+            # Product image
+            if pd.notna(product.get('Product Image URL', None)):
+                st.image(product['Product Image URL'], width=130)
+            else:
+                st.image("https://via.placeholder.com/140x140?text=No+Image", width=130)
+            
+            # Product details
+            st.markdown(f"<div style='min-height: 3em;'><strong>{product['Product']}</strong></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='color: #333;'>${product['Sales']:.2f}</div>", unsafe_allow_html=True)
+            
+            # Rating stars (highlighted for top rated)
+            rating = int(product.get('Rating', 0))
+            st.markdown(f"<div style='color: gold; font-size: 1.2em;'>{'★' * rating}{'☆' * (5-rating)}</div>", unsafe_allow_html=True)
+            
+            # Category and country
+            st.markdown(f"<div style='color: {colors['accent']}; font-size: 0.9em;'>{category} | {product.get('Country', '')}</div>", unsafe_allow_html=True)
+            
+            # View details button
+            button_id = f"top_rated_{top_col}_{product.get('Product ID', top_col)}"
+            if st.button("View Details", key=button_id):
+                st.session_state['selected_product'] = product["Product"]
+                st.experimental_rerun()
+            
+            # Close card container
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Add some space after the top rated section
+    st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+    
+    # SECOND: Show regular filtered products
+    if filter_text:
+        st.subheader(f"Filtered {filter_text}")
+    else:
+        st.subheader("All Products")
+    
     # Calculate number of rows needed
     products_per_row = 3
     num_products = len(filtered_data)
     num_rows = (num_products + products_per_row - 1) // products_per_row
-    
-    # Process each row
+            
+    # Process each row of regular products
     for row in range(num_rows):
         # Create columns for this row
         cols = st.columns(products_per_row)
@@ -530,11 +660,6 @@ if len(filtered_data) > 0:
                     button_id = f"btn_{row}_{col}_{product['Product ID']}"
                     if st.button("View Details", key=button_id):
                         st.session_state['selected_product'] = product["Product"]
-                        st.experimental_rerun()
-                    
-                    # Close the card container
-                    st.markdown('</div>', unsafe_allow_html=True)
-    
 # Display message if no products match the filters
 elif len(filtered_data) == 0:
     st.info("No products match your selected filters. Try adjusting your filters to see more products.")
