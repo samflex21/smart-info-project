@@ -323,48 +323,58 @@ if recommender is None or df.empty:
     st.error("No product data available. Please make sure 'ecommerce dataset.csv' is in the project directory.")
     st.stop()
 
-# Custom Header with logo and store name
+# Modern header with green gradient background
 st.markdown("""
-<div style="background-color: #1E3A8A; padding: 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <div style="display: flex; align-items: center;">
-        <div style="font-size: 42px; margin-right: 20px; color: gold;">🛍️</div>
-        <div>
-            <h1 style="color: gold; margin: 0; font-size: 36px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">S&N SMART STORE</h1>
-            <p style="color: #FFFFFF; margin: 0; font-size: 16px;">Quality products, smart choices</p>
-        </div>
-    </div>
+<div style="background: linear-gradient(90deg, #1E5631 0%, #0B3C1A 100%); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <span style="font-size: 30px; color: #E8F5E9; margin-right: 12px;">🛍️</span>
+    <span style="color: #E8F5E9; font-size: 30px; font-weight: bold; letter-spacing: 1px;">S&N SMART STORE</span>
 </div>
 """, unsafe_allow_html=True)
 
-# Compact but professional sidebar styling
+# Modern, sleek green sidebar styling
 st.markdown("""
 <style>
-    /* Clean sidebar styling */
+    /* Modern green sidebar styling */
     [data-testid="stSidebar"] {
-        background-color: #f8f9fa;
+        background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%);
+        border-right: 1px solid #A5D6A7;
+    }
+    
+    /* Page background */
+    .main .block-container {
+        background-color: #F9FFF9;
     }
     
     /* Reduced spacing for sidebar elements */
     .sidebar .element-container {margin-bottom: 0.2rem !important;}
     
-    /* Compact radio buttons */
+    /* Compact radio buttons with modern styling */
     div.row-widget.stRadio > div {flex-direction: column; gap: 1px !important;}
-    .stRadio [data-testid="stMarkdownContainer"] p {font-size: 0.9rem; margin: 0 !important; padding: 0 !important;}
+    .stRadio [data-testid="stMarkdownContainer"] p {font-size: 0.9rem; margin: 0 !important; padding: 0 !important; color: #2E7D32;}
+    
+    /* Enhance radio button styling */
+    .stRadio input[type='radio'] {accent-color: #2E7D32 !important;}
+    
+    /* Enhance slider styling */
+    .stSlider [data-baseweb="slider"] div {background-color: #2E7D32 !important;}
     
     /* Compact header styling */
     .sidebar .stSubheader {margin-top: 0.5rem !important; margin-bottom: 0.1rem !important; padding-bottom: 0 !important;}
     
-    /* Title needs less margin */
-    .sidebar [data-testid="stTitle"] {margin-bottom: 0.2rem !important;}
-    
-    /* Thin dividers */
-    .sidebar hr {margin: 0.3rem 0 !important; border-color: #eee;}
+    /* Dividers match color scheme */
+    .sidebar hr {margin: 0.3rem 0 !important; border-color: #A5D6A7;}
     
     /* Make slider more compact */
     .stSlider {margin: 0.2rem 0 !important; padding: 0 !important;}
     
     /* Selectbox more compact */
     .stSelectbox {margin: 0 !important; padding: 0 !important;}
+    
+    /* Selectbox styling */
+    .stSelectbox [data-baseweb="select"] {border-color: #2E7D32 !important;}
+    
+    /* Style all headers with the brand color */
+    h1, h2, h3, h4, h5 {color: #1E5631 !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -395,14 +405,14 @@ selected_category = st.sidebar.radio(
     label_visibility="collapsed"
 )
 
-# Define category-based color schemes
+# Define category-based color schemes with green variants
 category_colors = {
-    'Body care': {'primary': '#AED9E0', 'secondary': '#B8F2E6', 'accent': '#5E6472'},
-    'Face care': {'primary': '#FAF3DD', 'secondary': '#FFA69E', 'accent': '#AA4465'},
-    'Hair care': {'primary': '#B8D8D8', 'secondary': '#7A9E9F', 'accent': '#4F6367'},
-    'Home and Accessories': {'primary': '#EAF2E3', 'secondary': '#61A0AF', 'accent': '#204E4A'},
-    'Luxury Jewelry': {'primary': '#F1E0C5', 'secondary': '#C8A951', 'accent': '#604D53'},
-    'Make up': {'primary': '#FFC3A0', 'secondary': '#FFAFBD', 'accent': '#BB377D'}
+    'Body care': {'primary': '#C8E6C9', 'secondary': '#A5D6A7', 'accent': '#2E7D32'},
+    'Face care': {'primary': '#DCEDC8', 'secondary': '#C5E1A5', 'accent': '#558B2F'},
+    'Hair care': {'primary': '#E8F5E9', 'secondary': '#C8E6C9', 'accent': '#388E3C'},
+    'Home and Accessories': {'primary': '#F1F8E9', 'secondary': '#DCEDC8', 'accent': '#33691E'},
+    'Luxury Jewelry': {'primary': '#E0F2F1', 'secondary': '#B2DFDB', 'accent': '#00796B'},
+    'Make up': {'primary': '#E8F5E9', 'secondary': '#A5D6A7', 'accent': '#1B5E20'}
 }
 
 # Compact country header
@@ -553,12 +563,13 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
 if len(filtered_data) > 0:
     # Show the top rated products section first
     st.markdown("""
-    <div style='margin-top: 20px; margin-bottom: 30px; 
-    background-color: #f8f1e5; padding: 15px; 
-    border-radius: 10px; border-left: 4px solid #F39C12;'>
-    <h3 style='color: #F39C12;'>⭐ Top Rated Products</h3>
-    <p>Products our customers love the most</p>
-    </div>""", unsafe_allow_html=True)
+    <div style="margin-bottom: 1.5rem;">
+        <h2 style="color: #1E5631; margin-bottom: 0.5rem; font-weight: 600; letter-spacing: 0.5px;">
+            <span style="color: #F5B041; margin-right: 8px;">⭐</span> Top Rated Products
+        </h2>
+        <p style="color: #2E7D32; margin: 0; font-size: 1rem;">Products our customers love the most</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Get top 3 highest rated products from entire dataset
     top_rated = df.sort_values(by='Rating', ascending=False).head(3).reset_index(drop=True)
@@ -576,37 +587,59 @@ if len(filtered_data) > 0:
             category = product.get('Category', 'Uncategorized')
             colors = category_colors.get(category, {'primary': '#fff8ec', 'secondary': '#f8f1e5', 'accent': '#F39C12'})
             
-            # Create card with special styling for top rated products
-            st.markdown(f'<div style="background-color: {colors["primary"]}; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; border-left: 4px solid {colors["accent"]}; border-top: 2px solid gold;">', unsafe_allow_html=True)
+            # Create a modern box for the product with green styling
+            st.markdown(f"""
+            <div style='border: 1px solid #A5D6A7; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s, box-shadow 0.3s; height: 100%; background-color: white;'>
+                <div style='background: linear-gradient(45deg, {colors['primary']} 0%, {colors['secondary']} 100%); padding: 12px; position: relative;'>
+                    <h4 style='color: #1E5631; margin: 0; font-weight: 600; font-size: 16px;'>{product['Product']}</h4>
+                    <div style='position: absolute; top: 8px; right: 8px; background-color: rgba(255,255,255,0.9); border-radius: 4px; padding: 2px 6px;'>
+                        <span style='color: #1E5631; font-weight: bold;'>TOP RATED</span>
+                    </div>
+                </div>
+                <div style='padding: 15px;'>
+            """, unsafe_allow_html=True)
             
-            # Add a top rated badge
-            st.markdown('<div style="position: absolute; top: 5px; right: 5px; background-color: gold; color: #333; padding: 3px 8px; border-radius: 10px; font-size: 0.7em; font-weight: bold;">TOP RATED</div>', unsafe_allow_html=True)
-            
-            # Product image
+            # Display the product image if available
             if pd.notna(product.get('Product Image URL', None)):
-                st.image(product['Product Image URL'], width=130)
+                st.image(product['Product Image URL'], width=200)
             else:
-                st.image("https://via.placeholder.com/140x140?text=No+Image", width=130)
+                # Use a styled placeholder with the category name
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
+                            height: 180px; display: flex; align-items: center; justify-content: center; 
+                            margin-bottom: 15px; border-radius: 6px;'>
+                    <p style='color: #2A416A; text-align: center; font-weight: 500; font-size: 18px;'>{product['Category']}</p>
+                </div>
+                """, unsafe_allow_html=True)
             
-            # Product details
-            st.markdown(f"<div style='min-height: 3em;'><strong>{product['Product']}</strong></div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='color: #333;'>${product['Sales']:.2f}</div>", unsafe_allow_html=True)
+            # Display price with currency sign using green styling
+            st.markdown(f"<h3 style='color: #1E5631; margin: 8px 0; font-weight: 700;'>${product['Sales']:.2f}</h3>", unsafe_allow_html=True)
             
-            # Rating stars (highlighted for top rated)
-            rating = int(product.get('Rating', 0))
-            st.markdown(f"<div style='color: gold; font-size: 1.2em;'>{'★' * rating}{'☆' * (5-rating)}</div>", unsafe_allow_html=True)
+            # Display rating as stars
+            rating_stars = "⭐" * int(product['Rating'])
+            if product['Rating'] % 1 >= 0.5:
+                rating_stars += "½"
+            st.markdown(f"<div style='margin-bottom: 8px;'>{rating_stars}</div>", unsafe_allow_html=True)
             
-            # Category and country
-            st.markdown(f"<div style='color: {colors['accent']}; font-size: 0.9em;'>{category} | {product.get('Country', '')}</div>", unsafe_allow_html=True)
+            # Show category and country with matching styling
+            if 'Category' in product and 'Country' in product:
+                st.markdown(f"<p style='color: #566573; margin-bottom: 12px; font-size: 14px;'>{product['Category']} | {product['Country']}</p>", unsafe_allow_html=True)
             
-            # View details button
-            button_id = f"top_rated_{top_col}_{product.get('Product ID', top_col)}"
-            if st.button("View Details", key=button_id):
-                st.session_state['selected_product'] = product["Product"]
-                st.experimental_rerun()
+            # Close the inner div
+            st.markdown("</div>", unsafe_allow_html=True)
             
-            # Close card container
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Add a modern green details button
+            st.markdown(f"""
+            <div style='padding: 0 15px 15px 15px;'>
+                <button style='background-color: #2E7D32; color: white; border: none; border-radius: 4px; 
+                              padding: 8px 16px; width: 100%; cursor: pointer; font-weight: 500; 
+                              box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>View Details</button>
+            </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Hidden button for functionality
+            st.button("View Details", key=f"top_rated_{top_col}_{product.get('Product ID', top_col)}")
     
     # Add some space after the top rated section
     st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
