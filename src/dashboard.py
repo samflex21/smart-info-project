@@ -323,8 +323,35 @@ if recommender is None or df.empty:
     st.error("No product data available. Please make sure 'ecommerce dataset.csv' is in the project directory.")
     st.stop()
 
-# Modern header with green gradient background
-st.markdown("""
+# Create a minimal empty column between sidebar and content for spacing
+# This creates a physical gap that cannot be overridden by CSS
+_, content_area = st.columns([0.03, 0.97])
+
+# All content will go inside this column
+with content_area:
+    # Additional CSS for styling the spacing
+    st.markdown("""
+    <style>
+        /* Enhanced sidebar with stronger border and shadow */
+        [data-testid="stSidebar"] {
+            border-right: 2px solid #C8E6C9;
+            box-shadow: 3px 0px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Add extra margin to all content inside the main area */
+        .element-container {
+            margin-left: 1rem !important;
+        }
+        
+        /* Product cards get extra spacing */
+        .product-card {
+            margin-left: 0.5rem !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Modern header with green gradient background
+    st.markdown("""
 <div style="background: linear-gradient(90deg, #1E5631 0%, #0B3C1A 100%); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <span style="font-size: 30px; color: #E8F5E9; margin-right: 12px;">🛍️</span>
     <span style="color: #E8F5E9; font-size: 30px; font-weight: bold; letter-spacing: 1px;">S&N SMART STORE</span>
@@ -348,15 +375,17 @@ st.markdown("""
         max-width: 1200px;
         padding-top: 1rem;
         padding-right: 1rem;
-        padding-left: 1rem;
+        padding-left: 4rem; /* Much larger left padding to create more space from sidebar */
         padding-bottom: 1rem;
+        margin-left: 25px; /* Significantly increased margin from sidebar */
     }
     
     /* Ensure product cards stay in grid */
     div.row-widget.stHorizontal {
         flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 10px;
+        justify-content: flex-start; /* Changed from space-between to create more even spacing */
+        gap: 20px; /* Increased gap between cards */
+        padding-left: 10px; /* Additional padding for product grid */
     }
     
     /* Make sure images don't overflow */
@@ -404,8 +433,24 @@ st.markdown("""
     /* Media queries for different screen sizes */
     @media (max-width: 768px) {
         .main .block-container {
-            padding: 0.5rem;
+            padding: 0.5rem 0.5rem 0.5rem 2.5rem; /* Increased left padding on mobile */
         }
+    }
+    
+    /* Additional space between sidebar and content on all screen sizes */
+    .main {
+        margin-left: 30px;
+    }
+    
+    /* Force main content area to start with significant gap from sidebar */
+    .stApp > header + div > div:nth-child(2) {
+        margin-left: 40px !important;
+    }
+    
+    /* Create visual separation between sidebar and main content with a subtle divider */
+    [data-testid="stSidebar"] {
+        border-right: 1px solid #C8E6C9;
+        box-shadow: 2px 0px 5px rgba(0,0,0,0.05);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -592,9 +637,11 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
 
 
 
-if len(filtered_data) > 0:
-    # Show the top rated products section first
-    st.markdown("""
+# All remaining dashboard content continues in the content_area column
+with content_area:
+    if len(filtered_data) > 0:
+        # Show the top rated products section first
+        st.markdown("""
     <div style="margin-bottom: 1.5rem;">
         <h2 style="color: #1E5631; margin-bottom: 0.5rem; font-weight: 600; letter-spacing: 0.5px;">
             <span style="color: #F5B041; margin-right: 8px;">⭐</span> Top Rated Products
@@ -687,94 +734,102 @@ if len(filtered_data) > 0:
     num_products = len(filtered_data)
     num_rows = (num_products + products_per_row - 1) // products_per_row
             
-    # Process each row of regular products
-    for row in range(num_rows):
-        # Create columns for this row
-        cols = st.columns(products_per_row)
-        
-        # Fill the columns with products
-        for col in range(products_per_row):
-            # Calculate the product index
-            idx = row * products_per_row + col
+    # Check if we have any products to display after filtering
+    if len(filtered_data) > 0:
+        # Process each row of regular products
+        for row in range(num_rows):
+            # Create columns for this row
+            cols = st.columns(products_per_row)
             
-            # Check if we still have products to display
-            if idx < num_products:
-                product = filtered_data.iloc[idx]
+            # Fill the columns with products
+            for col in range(products_per_row):
+                # Calculate the product index
+                idx = row * products_per_row + col
                 
-                # Display product in this column
-                with cols[col]:
-                    # Create a clean card-like container with CSS
-                    st.markdown('<div style="background-color: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%">', unsafe_allow_html=True)
+                # Check if we still have products to display
+                if idx < num_products:
+                    product = filtered_data.iloc[idx]
+                    
+                    # Display product in this column
+                    with cols[col]:
+                        # Create a clean card-like container with CSS
+                        st.markdown('<div style="background-color: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%">', unsafe_allow_html=True)
+                        
+                        # Product image
+                        if pd.notna(product['Product Image URL']):
+                            st.image(product['Product Image URL'], width=130)
+                        else:
+                            st.image("https://via.placeholder.com/140x140?text=No+Image", width=130)
+                        
+                        # Product details
+                        st.markdown(f"**{product['Product']}**")
+                        st.markdown(f"<span style='color: #B12704; font-weight: bold; font-size: 18px;'>${product['Sales']:.2f}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color: #565959; font-size: 14px;'>{product['Category']} | {product['Country']}</span>", unsafe_allow_html=True)
+                        
+                        # Rating as stars
+                        rating = int(product["Rating"])
+                        st.markdown(f"<span style='color: #FFA41C;'>{'★' * rating}{'☆' * (5-rating)}</span>", unsafe_allow_html=True)
+                        
+                        # View details button
+                        button_id = f"btn_{row}_{col}_{product['Product ID']}"
+                        if st.button("View Details", key=button_id):
+                            st.session_state['selected_product'] = product["Product"]
+    else:
+        # Display message if no products match the filters
+        st.info("No products match your selected filters. Try adjusting your filters to see more products.")
+
+
+    # Initialize session state for selected product
+    if 'selected_product' in st.session_state:
+        st.markdown("---")
+        st.header("🔍 Products Similar to: " + st.session_state['selected_product'])
+        
+        # Get similar products
+        similar_products = recommender.get_recommendations(st.session_state['selected_product'], n=4)
+        
+        if similar_products:
+            # Create a container with styling
+            st.markdown('<div style="background-color: #f8f1e5; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #F39C12;">', unsafe_allow_html=True)
+            
+            # Create columns for the similar products
+            cols = st.columns(len(similar_products))
+            
+            # Display each product in its column
+            for i, (col, product) in enumerate(zip(cols, similar_products)):
+                with col:
+                    # Get category-specific colors
+                    category = product.get('category', 'Uncategorized')
+                    colors = category_colors.get(category, {'primary': '#fff8ec', 'secondary': '#f8f1e5', 'accent': '#F39C12'})
+                    
+                    # Create a clean card container with category-specific styling
+                    primary_color = colors['primary']
+                    accent_color = colors['accent']
+                    st.markdown(f'<div style="background-color: {primary_color}; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%; border-left: 4px solid {accent_color};">', unsafe_allow_html=True)
                     
                     # Product image
-                    if pd.notna(product['Product Image URL']):
-                        st.image(product['Product Image URL'], width=130)
+                    if pd.notna(product.get('image_url', None)):
+                        st.image(product['image_url'], width=120)
                     else:
-                        st.image("https://via.placeholder.com/140x140?text=No+Image", width=130)
+                        st.image("https://via.placeholder.com/120x120?text=No+Image", width=120)
                     
                     # Product details
-                    st.markdown(f"**{product['Product']}**")
-                    st.markdown(f"<span style='color: #B12704; font-weight: bold; font-size: 18px;'>${product['Sales']:.2f}</span>", unsafe_allow_html=True)
-                    st.markdown(f"<span style='color: #565959; font-size: 14px;'>{product['Category']} | {product['Country']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-weight: bold; font-size: 16px;'>{product['name']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='color: #B12704; font-weight: bold;'>${product.get('price', '0.00')}</div>", unsafe_allow_html=True)
                     
-                    # Rating as stars
-                    rating = int(product["Rating"])
+                    # Close container
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    # Rating stars
+                    rating = int(product["rating"])
                     st.markdown(f"<span style='color: #FFA41C;'>{'★' * rating}{'☆' * (5-rating)}</span>", unsafe_allow_html=True)
                     
-                    # View details button
-                    button_id = f"btn_{row}_{col}_{product['Product ID']}"
-                    if st.button("View Details", key=button_id):
-                        st.session_state['selected_product'] = product["Product"]
-# Display message if no products match the filters
-elif len(filtered_data) == 0:
-    st.info("No products match your selected filters. Try adjusting your filters to see more products.")
-
-
-# Initialize session state for selected product
-if 'selected_product' in st.session_state:
-    st.markdown("---")
-    st.header("🔍 Products Similar to: " + st.session_state['selected_product'])
-    
-    # Get similar products
-    similar_products = recommender.get_recommendations(st.session_state['selected_product'], n=4)
-    
-    if similar_products:
-        # Create a container with styling
-        st.markdown('<div style="background-color: #f8f1e5; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #F39C12;">', unsafe_allow_html=True)
-        
-        # Create columns for the similar products
-        cols = st.columns(len(similar_products))
-        
-        # Display each product in its column
-        for i, (col, product) in enumerate(zip(cols, similar_products)):
-            with col:
-                # Get category-specific colors
-                category = product.get('category', 'Uncategorized')
-                colors = category_colors.get(category, {'primary': '#fff8ec', 'secondary': '#f8f1e5', 'accent': '#F39C12'})
-                
-                # Create a clean card container with category-specific styling
-                primary_color = colors['primary']
-                accent_color = colors['accent']
-                st.markdown(f'<div style="background-color: {primary_color}; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%; border-left: 4px solid {accent_color};">', unsafe_allow_html=True)
-                
-                # Product image
-                if pd.notna(product.get('image_url', None)):
-                    st.image(product['image_url'], width=130)
-                else:
-                    st.image("https://via.placeholder.com/140x140?text=No+Image", width=130)
-                
-                # Product details
-                st.markdown(f"<div style='font-weight: bold; font-size: 16px;'>{product['name']}</div>", unsafe_allow_html=True)
-                st.markdown(f"<span style='color: #B12704; font-weight: bold; font-size: 18px;'>${product['price']:.2f}</span>", unsafe_allow_html=True)
-                
-                # Rating stars
-                rating = int(product["rating"])
-                st.markdown(f"<span style='color: #FFA41C;'>{'★' * rating}{'☆' * (5-rating)}</span>", unsafe_allow_html=True)
-                
-                # Category with custom styling
-                accent_color = colors['accent']
-                st.markdown(f"<span style='color: {accent_color}; font-size: 14px;'>{product['category']}</span>", unsafe_allow_html=True)
-                
+                    # Category with custom styling
+                    accent_color = colors['accent']
+                    st.markdown(f"<span style='color: {accent_color}; font-size: 14px;'>{product['category']}</span>", unsafe_allow_html=True)
+                    
+                    # Similarity score
+                    accent_color = colors['accent']
+                    st.markdown(f"<span style='color: {accent_color}; font-weight: bold;'>Similarity: {product['similarity']:.2f}</span>", unsafe_allow_html=True)
                 # Similarity score
                 accent_color = colors['accent']
                 st.markdown(f"<span style='color: {accent_color}; font-weight: bold;'>Similarity: {product['similarity']:.2f}</span>", unsafe_allow_html=True)
