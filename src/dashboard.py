@@ -331,18 +331,43 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Modern, sleek green sidebar styling
+# Responsive design with cross-device compatibility
 st.markdown("""
 <style>
-    /* Modern green sidebar styling */
+    /* Modern green sidebar styling with fixed width */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%);
         border-right: 1px solid #A5D6A7;
+        min-width: 230px !important;
+        max-width: 250px !important;
     }
     
-    /* Page background */
+    /* Page background with responsive container */
     .main .block-container {
         background-color: #F9FFF9;
+        max-width: 1200px;
+        padding-top: 1rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    /* Ensure product cards stay in grid */
+    div.row-widget.stHorizontal {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    /* Make sure images don't overflow */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Fixed heights for product cards */
+    div[data-testid="column"] > div:first-child {
+        height: 100%;
     }
     
     /* Reduced spacing for sidebar elements */
@@ -375,6 +400,13 @@ st.markdown("""
     
     /* Style all headers with the brand color */
     h1, h2, h3, h4, h5 {color: #1E5631 !important;}
+    
+    /* Media queries for different screen sizes */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding: 0.5rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
