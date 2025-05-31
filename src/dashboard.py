@@ -595,10 +595,15 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
                 category = product.get('Category', 'Uncategorized')
                 colors = category_colors.get(category, {'primary': '#fff8ec', 'secondary': '#f8f1e5', 'accent': '#F39C12'})
                 
-                # Create product card container with category-specific background
-                primary_color = colors['primary']
-                accent_color = colors['accent']
-                st.markdown(f'<div class="product-card" style="background-color: {primary_color}; border-left: 4px solid {accent_color};">', unsafe_allow_html=True)
+                # Create clickable container for the entire product card
+                product_container = st.container()
+                
+                # Make the container clickable
+                with product_container.container():
+                    # Create product card container with category-specific background
+                    primary_color = colors['primary']
+                    accent_color = colors['accent']
+                    st.markdown(f'<div class="product-card" style="background-color: {primary_color}; border-left: 4px solid {accent_color}; cursor: pointer;">', unsafe_allow_html=True)
                 
                 # Product image
                 if pd.notna(product.get('Product Image URL', None)):
@@ -619,23 +624,78 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
                 # Category and country with custom styling
                 st.markdown(f"<div class='category' style='color: {colors['accent']};'>{category} | {product.get('Country', '')}</div>", unsafe_allow_html=True)
                 
-                # Unique button key to avoid conflicts
-                unique_button_key = f"{section_id}_{start_idx}_{i}_{product.get('Product ID', i)}"
-                
-                # View details button with category accent color
-                if st.button("View Details", key=unique_button_key, 
-                             help="View product details and see similar products"):
-                    st.session_state['selected_product'] = product["Product"]
-                    st.experimental_rerun()
-                
                 # Close card container
                 st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Make the entire product card clickable
+                if product_container.button('👆 Click for similar products', key=f"product_{section_id}_{start_idx}_{i}", use_container_width=True):
+                    st.session_state['selected_product'] = product["Product"]
+                    # Force rerun to show similar products
+                    st.experimental_rerun()
                 
     return True
 
 
 
 
+
+# Display similar products if a product is selected
+def display_similar_products():
+    if 'selected_product' in st.session_state and st.session_state['selected_product']:
+        selected_product = st.session_state['selected_product']
+        
+        # Get recommendations for the selected product
+        similar_products = recommender.get_recommendations(selected_product, n=6)
+        
+        if similar_products:
+            # Display a header for similar products section
+            st.markdown(f"""
+            <div style="margin: 2rem 0 1rem 0; padding: 20px; background: linear-gradient(135deg, rgba(195, 106, 45, 0.1) 0%, rgba(74, 101, 130, 0.1) 100%); border-radius: 8px;">
+                <h2 style="color: var(--terracotta); margin: 0; position: relative; display: inline-block;">
+                    Similar to: <span style="color: var(--slate-blue);">{selected_product}</span>
+                </h2>
+                <p style="margin-top: 0.5rem; color: #333;">Based on category, price, and other factors</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Create columns for similar products
+            cols = st.columns(3)
+            
+            # Display each similar product
+            for i, product in enumerate(similar_products[:min(6, len(similar_products))]):
+                col_idx = i % 3
+                with cols[col_idx]:
+                    # Get similarity score as percentage
+                    similarity = int(product['similarity'] * 100)
+                    
+                    # Create a product card
+                    st.markdown(f'''
+                    <div style="background-color: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; 
+                                border: 1px solid rgba(74, 101, 130, 0.3); box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <img src="{product['image_url']}" style="max-width: 120px; max-height: 120px; object-fit: contain;">
+                        </div>
+                        <h4 style="margin: 10px 0; min-height: 2.5em; color: var(--slate-blue);">{product['name']}</h4>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; color: var(--terracotta); font-size: 1.1em;">${product['price']:.2f}</span>
+                            <span style="background-color: rgba(195, 106, 45, 0.1); color: var(--terracotta); 
+                                     padding: 3px 8px; border-radius: 12px; font-size: 0.85em;">
+                                {similarity}% match
+                            </span>
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <span style="color: #FFA41C;">{'★' * int(product['rating'])}{'☆' * (5-int(product['rating']))}</span>
+                        </div>
+                        <div style="font-size: 0.9em; color: #555; margin-top: 5px;">{product['category']}</div>
+                    </div>
+                    ''', unsafe_allow_html=True)
+            
+            # Add a button to clear selection
+            if st.button("❌ Clear Selection", key="clear_selection"):
+                del st.session_state['selected_product']
+                st.experimental_rerun()
+        else:
+            st.info(f"No similar products found for {selected_product}")
 
 # All remaining dashboard content continues in the content_area column
 with content_area:
@@ -707,18 +767,8 @@ with content_area:
             # Close the inner div
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # Add a modern green details button
-            st.markdown(f"""
-            <div style='padding: 0 15px 15px 15px;'>
-                <button style='background-color: #2E7D32; color: white; border: none; border-radius: 4px; 
-                              padding: 8px 16px; width: 100%; cursor: pointer; font-weight: 500; 
-                              box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>View Details</button>
-            </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Hidden button for functionality
-            st.button("View Details", key=f"top_rated_{top_col}_{product.get('Product ID', top_col)}")
+            # View Details button removed as requested
+            st.markdown(f"""</div></div>""", unsafe_allow_html=True)
     
     # Add some space after the top rated section
     st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
@@ -770,13 +820,19 @@ with content_area:
                         rating = int(product["Rating"])
                         st.markdown(f"<span style='color: #FFA41C;'>{'★' * rating}{'☆' * (5-rating)}</span>", unsafe_allow_html=True)
                         
-                        # View details button
-                        button_id = f"btn_{row}_{col}_{product['Product ID']}"
-                        if st.button("View Details", key=button_id):
-                            st.session_state['selected_product'] = product["Product"]
+                        # Close the card container
+                        st.markdown('</div>', unsafe_allow_html=True)
+                # Close the column
+                st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Close the row
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
         # Display message if no products match the filters
         st.info("No products match your selected filters. Try adjusting your filters to see more products.")
+        
+    # Display similar products section if a product is selected
+    display_similar_products()
 
 
     # Initialize session state for selected product
