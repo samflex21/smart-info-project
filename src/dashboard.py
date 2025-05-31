@@ -323,38 +323,38 @@ if recommender is None or df.empty:
     st.error("No product data available. Please make sure 'ecommerce dataset.csv' is in the project directory.")
     st.stop()
 
-# Create a minimal empty column between sidebar and content for spacing
-# This creates a physical gap that cannot be overridden by CSS
-_, content_area = st.columns([0.03, 0.97])
+# Using both a physical column for spacing and CSS for styling
+st.markdown("""
+<style>
+    /* Enhanced sidebar with border and shadow */
+    [data-testid="stSidebar"] {
+        border-right: 2px solid #C8E6C9;
+        box-shadow: 2px 0px 5px rgba(0,0,0,0.1);
+    }
+    
+    /* Reset padding since we're using physical columns for spacing now */
+    .main .block-container {
+        padding-left: 1rem !important;
+        max-width: 100% !important;
+    }
+    
+    /* Product cards get subtle spacing */
+    .product-card {
+        margin-left: 0rem !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# All content will go inside this column
-with content_area:
-    # Additional CSS for styling the spacing
-    st.markdown("""
-    <style>
-        /* Enhanced sidebar with stronger border and shadow */
-        [data-testid="stSidebar"] {
-            border-right: 2px solid #C8E6C9;
-            box-shadow: 3px 0px 10px rgba(0,0,0,0.1);
-        }
-        
-        /* Add extra margin to all content inside the main area */
-        .element-container {
-            margin-left: 1rem !important;
-        }
-        
-        /* Product cards get extra spacing */
-        .product-card {
-            margin-left: 0.5rem !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+# Create 7% spacing and 93% content columns for layout
+left_spacer, main_content = st.columns([0.07, 0.93])
 
+# Now all content goes into the main content column
+with main_content:
     # Modern header with green gradient background
     st.markdown("""
 <div style="background: linear-gradient(90deg, #1E5631 0%, #0B3C1A 100%); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <span style="font-size: 30px; color: #E8F5E9; margin-right: 12px;">🛍️</span>
-    <span style="color: #E8F5E9; font-size: 30px; font-weight: bold; letter-spacing: 1px;">S&N SMART STORE</span>
+    <span style="font-size: 24px; color: #FFFFFF; font-weight: 600;">S&N SMART STORE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -697,11 +697,10 @@ def display_similar_products():
         else:
             st.info(f"No similar products found for {selected_product}")
 
-# All remaining dashboard content continues in the content_area column
-with content_area:
-    if len(filtered_data) > 0:
-        # Show the top rated products section first
-        st.markdown("""
+# All remaining dashboard content continues below
+if len(filtered_data) > 0:
+    # Show the top rated products section first
+    st.markdown("""
     <div style="margin-bottom: 1.5rem;">
         <h2 style="color: #1E5631; margin-bottom: 0.5rem; font-weight: 600; letter-spacing: 0.5px;">
             <span style="color: #F5B041; margin-right: 8px;">⭐</span> Top Rated Products
