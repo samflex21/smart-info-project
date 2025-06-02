@@ -54,7 +54,7 @@ st.markdown("""
     .metric-card {
         background-color: white;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 18px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
@@ -62,7 +62,7 @@ st.markdown("""
     .chart-container {
         background-color: white;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 18px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin: 10px 0;
     }
@@ -182,7 +182,7 @@ st.markdown("""
     .recommended-section {
         background-color: #f8f1e5;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 18px;
         margin: 20px 0;
         border-left: 4px solid #3C5067;
     }
@@ -715,7 +715,7 @@ st.sidebar.markdown(f"""
 # Category filter in container with gradient from lighter to darker blue
 st.sidebar.markdown(f"""
 <div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
-            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
     <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
@@ -747,7 +747,7 @@ category_colors = {
 # Country filter in container with gradient from lighter to darker blue
 st.sidebar.markdown(f"""
 <div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
-            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
     <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
@@ -773,7 +773,7 @@ selected_country = st.sidebar.selectbox(
 # Rating filter in container with gradient from lighter to darker blue
 st.sidebar.markdown(f"""
 <div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
-            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
     <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
@@ -810,7 +810,7 @@ filter_by_rating = min_rating > 0
 # Sort options in container with gradient from lighter to darker blue
 st.sidebar.markdown(f"""
 <div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
-            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
     <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
@@ -822,7 +822,7 @@ st.sidebar.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Custom CSS to make radio buttons match deep slate blue theme
+# Custom CSS to make radio buttons match lighter blue theme with white text throughout
 st.markdown(f"""
 <style>
     /* Radio button styling */
@@ -837,6 +837,66 @@ st.markdown(f"""
     /* Also update the slider handle */
     [data-testid="stSlider"] > div > div > div > div {{background-color: {filter_colors['lightest_primary']} !important;}}
     [data-testid="stSlider"] > div > div > div > div > div > div {{background-color: {filter_colors['text_light']} !important; box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);}}
+</style>
+""", unsafe_allow_html=True)
+
+# Apply direct styling for dropdown menus to ensure they're clearly visible
+st.markdown("""
+<style>
+    /* Main dropdown field */
+    .stSelectbox [data-baseweb="select"] {
+        background-color: {filter_colors['primary']} !important; 
+        border: 1px solid {filter_colors['dark_bg']} !important;
+    }
+    .stSelectbox [data-baseweb="select"] div[data-testid="stMarkdownContainer"] p {
+        color: {filter_colors['text_light']} !important;
+        font-weight: bold !important;
+    }
+    
+    /* Dropdown menu */
+    div[data-baseweb="popover"] {
+        background-color: {filter_colors['primary']} !important;
+    }
+    div[data-baseweb="popover"] ul {
+        background-color: {filter_colors['primary']} !important;
+    }
+    div[data-baseweb="popover"] ul li {
+        background-color: {filter_colors['primary']} !important;
+    }
+    div[data-baseweb="popover"] ul li div {
+        color: {filter_colors['text_light']} !important;
+    }
+    div[data-baseweb="popover"] [role="option"]:hover {
+        background-color: {filter_colors['dark_bg']} !important;
+    }
+    
+    /* Override any inline styles */
+    div[role="listbox"] {
+        background-color: {filter_colors['primary']} !important;
+    }
+    div[role="listbox"] [role="option"] {
+        background-color: {filter_colors['primary']} !important;
+        color: {filter_colors['text_light']} !important;
+    }
+    div[role="listbox"] [role="option"]:hover {
+        background-color: {filter_colors['dark_bg']} !important;
+    }
+    
+    /* Make the selected value visible */
+    .stSelectbox [data-baseweb="select"] div {
+        color: {filter_colors['text_light']} !important;
+    }
+    
+    /* Override any other elements - except labels */
+    div[data-testid="stSelectbox"] *:not(label) {
+        color: {filter_colors['text_light']} !important;
+    }
+    
+    /* Make sure list items are visible */
+    li[aria-selected="true"], li[aria-selected="false"] {
+        background-color: {filter_colors['primary']} !important;
+        color: {filter_colors['text_light']} !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1199,7 +1259,7 @@ if len(filtered_data) > 0:
                     # Display product in this column
                     with cols[col]:
                         # Create a clean card-like container with CSS
-                        st.markdown('<div style="background-color: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%">', unsafe_allow_html=True)
+                        st.markdown('<div style="background-color: white; border-radius: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%">', unsafe_allow_html=True)
                         
                         # Product image
                         if pd.notna(product['Product Image URL']):
@@ -1241,7 +1301,7 @@ if len(filtered_data) > 0:
         
         if similar_products:
             # Create a container with styling
-            st.markdown('<div style="background-color: #f8f1e5; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #F39C12;">', unsafe_allow_html=True)
+            st.markdown('<div style="background-color: #f8f1e5; padding: 20px; border-radius: 18px; margin: 20px 0; border-left: 4px solid #F39C12;">', unsafe_allow_html=True)
             
             # Create columns for the similar products
             cols = st.columns(len(similar_products))
@@ -1256,7 +1316,7 @@ if len(filtered_data) > 0:
                     # Create a clean card container with category-specific styling
                     primary_color = colors['primary']
                     accent_color = colors['accent']
-                    st.markdown(f'<div style="background-color: {primary_color}; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%; border-left: 4px solid {accent_color};">', unsafe_allow_html=True)
+                    st.markdown(f'<div style="background-color: {primary_color}; border-radius: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; height: 100%; border-left: 4px solid {accent_color};">', unsafe_allow_html=True)
                     
                     # Product image
                     if pd.notna(product.get('image_url', None)):
