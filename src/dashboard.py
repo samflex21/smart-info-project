@@ -340,6 +340,56 @@ if recommender is None or df.empty:
     st.error("No product data available. Please make sure 'ecommerce dataset.csv' is in the project directory.")
     st.stop()
 
+# Function to add a product to the viewed products list
+def add_to_viewed_products(product_name):
+    # Only add if not already in the list
+    if product_name not in st.session_state['viewed_products']:
+        # Add to the beginning of the list (most recent first)
+        st.session_state['viewed_products'].insert(0, product_name)
+        # Keep only the 10 most recent views to avoid overwhelming the recommendations
+        if len(st.session_state['viewed_products']) > 10:
+            st.session_state['viewed_products'] = st.session_state['viewed_products'][:10]
+
+# Function to get personalized recommendations based on viewed products
+def get_personalized_recommendations(num_recommendations=6):
+    recommendations = []
+    # If the user has viewed products, get recommendations based on those
+    if st.session_state['viewed_products']:
+        # Use the three most recently viewed products for recommendations
+        recent_products = st.session_state['viewed_products'][:3]
+        
+        # Get recommendations for each recently viewed product
+        for product_name in recent_products:
+            similar_products = recommender.get_recommendations(product_name, n=3)
+            if similar_products:
+                for product in similar_products:
+                    # Check if this product is already in our recommendations
+                    if not any(rec['name'] == product['name'] for rec in recommendations):
+                        recommendations.append(product)
+                        if len(recommendations) >= num_recommendations:
+                            break
+            if len(recommendations) >= num_recommendations:
+                break
+    
+    # If we don't have enough recommendations yet (or no viewed products),
+    # add some top-rated products
+    if len(recommendations) < num_recommendations:
+        top_rated = df.sort_values(by='Rating', ascending=False).head(num_recommendations).reset_index(drop=True)
+        for i in range(min(len(top_rated), num_recommendations - len(recommendations))):
+            product = top_rated.iloc[i]
+            # Only add if not already in recommendations
+            if not any(rec['name'] == product['Product'] for rec in recommendations):
+                recommendations.append({
+                    'name': product['Product'],
+                    'category': product.get('Category', 'Unknown'),
+                    'price': product.get('Sales', 0),
+                    'similarity': 1.0,  # High similarity for top rated products
+                    'image_url': product.get('Product Image URL', ''),
+                    'rating': product.get('Rating', 0)
+                })
+    
+    return recommendations[:num_recommendations]
+
 # Using both a physical column for spacing and CSS for styling
 st.markdown("""
 <style>
@@ -365,6 +415,10 @@ st.markdown("""
 # Create 7% spacing and 93% content columns for layout
 left_spacer, main_content = st.columns([0.07, 0.93])
 
+# Initialize session state for viewed products if it doesn't exist
+if 'viewed_products' not in st.session_state:
+    st.session_state['viewed_products'] = []
+
 # Now all content goes into the main content column
 with main_content:
     # Modern header with enhanced design
@@ -375,6 +429,63 @@ with main_content:
     <span style="font-size: 28px; color: #FFFFFF; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">S&N SMART STORE</span>
 </div>
 """, unsafe_allow_html=True)
+    
+    # Display personalized recommendations section
+    if len(df) > 0 and 'viewed_products' in st.session_state:
+        # Get personalized recommendations
+        personal_recommendations = get_personalized_recommendations(6)
+        
+        if personal_recommendations:
+            # Create a stylish recommendations section
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, rgba(240, 230, 216, 0.4) 0%, rgba(217, 204, 186, 0.6) 100%); 
+                        padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0; border-left: 5px solid #3C5067;">
+                <h2 style="font-family: 'Playfair Display', 'Georgia', serif; color: #3C5067; margin-bottom: 1rem; font-weight: 600;">
+                    <span style="margin-right: 10px;">✨</span> Recommended For You
+                </h2>
+                <p style="color: #555; margin-bottom: 1.5rem; font-style: italic;">
+                    {"Based on your browsing history" if st.session_state['viewed_products'] else "Top picks we think you'll love"}
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between;">
+            """, unsafe_allow_html=True)
+            
+            # Create a 3-column layout for recommendations
+            rec_cols = st.columns(3)
+            
+            # Display each recommendation
+            for i, product in enumerate(personal_recommendations[:6]):
+                with rec_cols[i % 3]:
+                    # Create a clean, modern card design
+                    st.markdown(f"""
+                    <div style="background-color: white; border-radius: 8px; overflow: hidden; 
+                                box-shadow: 0 4px 8px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                        <div style="height: 160px; display: flex; align-items: center; justify-content: center; 
+                                    background-color: #f9f9f9; padding: 1rem; overflow: hidden;">
+                            <img src="{product['image_url']}" style="max-height: 140px; max-width: 100%; object-fit: contain;">
+                        </div>
+                        <div style="padding: 1rem;">
+                            <h4 style="color: #3C5067; font-family: 'Playfair Display', serif; margin-bottom: 0.5rem; 
+                                     font-size: 1rem; min-height: 2.5rem;">{product['name'][:50] + '...' if len(product['name']) > 50 else product['name']}</h4>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="color: #B12704; font-weight: bold;">${product['price']:.2f}</span>
+                                <span style="color: #FFA41C;">{'★' * int(product['rating'])}{'☆' * (5-int(product['rating']))}</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #555;">{product['category']}</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Add a view button that will track the product view
+                    if st.button(f"View Details", key=f"rec_{i}"):
+                        # Add to viewed products
+                        add_to_viewed_products(product['name'])
+                        # Set as selected product
+                        st.session_state['selected_product'] = product['name']
+                        # Force rerun
+                        st.rerun()
+            
+            # Close the recommendation container
+            st.markdown("</div></div>", unsafe_allow_html=True)
 
 # Responsive design with cross-device compatibility
 st.markdown("""
@@ -569,11 +680,35 @@ for cat in required_categories:
 all_categories = ['All'] + sorted(set(all_category_values + required_categories))
 
 # Add an elegant title to the sidebar
-st.sidebar.markdown("<h3 style='margin: 0 0 1.2rem 0; padding:0; font-size:1.5rem; color:#3C5067; font-family:Playfair Display, Georgia, serif;'>✨ Filter Products</h3>", unsafe_allow_html=True)
+# Add an elegant title with animated icon to the sidebar
+st.sidebar.markdown("""
+<div style="margin: 0 0 1.5rem 0; padding: 0.8rem; background: linear-gradient(135deg, #3C5067 0%, #4A6B8A 100%); 
+            border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; 
+               background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+    <div style="position: absolute; bottom: -15px; left: -15px; width: 50px; height: 50px; 
+               background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+    <h3 style="margin: 0; padding:0; font-size:1.5rem; color:#FFFFFF; font-family:'Playfair Display', Georgia, serif; 
+               text-shadow: 0 2px 4px rgba(0,0,0,0.2); position: relative; z-index: 1;">
+        <span style="margin-right: 8px;">✨</span> Filter Products
+    </h3>
+</div>
+""", unsafe_allow_html=True)
 
-# Category filter in container
-st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
-st.sidebar.markdown("<h4>Category</h4>", unsafe_allow_html=True)
+# Category filter in container with distinct styling
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #F0E6D8 0%, #E8DCCB 100%); 
+            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #3C5067;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #3C5067; 
+               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; 
+                     width: 24px; height: 24px; background-color: #3C5067; border-radius: 50%; 
+                     margin-right: 8px; color: white; font-size: 14px;">🏷️</span>
+        Category
+    </h4>
+</div>
+""", unsafe_allow_html=True)
 
 # Radio buttons for categories with proper accessibility
 selected_category = st.sidebar.radio(
@@ -581,8 +716,6 @@ selected_category = st.sidebar.radio(
     all_categories,
     key="category_radio",
     label_visibility="collapsed")
-
-st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 # Define category-based color schemes with lavender variants
 category_colors = {
@@ -594,9 +727,20 @@ category_colors = {
     'Make up': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'}
 }
 
-# Country filter in container
-st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
-st.sidebar.markdown("<h4>Country</h4>", unsafe_allow_html=True)
+# Country filter in container with global map theme
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #E8F4F8 0%, #D1E5ED 100%); 
+            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #4A90E2;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #2C3E50; 
+               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; 
+                     width: 24px; height: 24px; background-color: #4A90E2; border-radius: 50%; 
+                     margin-right: 8px; color: white; font-size: 14px;">🌎</span>
+        Country
+    </h4>
+</div>
+""", unsafe_allow_html=True)
 
 # Get all countries from the dataset
 countries = ['All'] + sorted(df['Country'].unique().tolist())
@@ -609,11 +753,29 @@ selected_country = st.sidebar.selectbox(
     label_visibility="collapsed"
 )
 
-st.sidebar.markdown('</div>', unsafe_allow_html=True)
+# Rating filter in container with star theme
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); 
+            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #FFA000;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #E65100; 
+               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; 
+                     width: 24px; height: 24px; background-color: #FFA000; border-radius: 50%; 
+                     margin-right: 8px; color: white; font-size: 14px;">⭐</span>
+        Minimum Rating
+    </h4>
+</div>
+""", unsafe_allow_html=True)
 
-# Rating filter in container
-st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
-st.sidebar.markdown("<h4>Minimum Rating</h4>", unsafe_allow_html=True)
+# Custom CSS to style the rating slider
+st.markdown("""
+<style>
+    /* Rating slider styling */
+    [data-testid="stSlider"] > div > div > div > div {background-color: #FFA000 !important;}
+    [data-testid="stSlider"] > div > div > div > div > div > div {background-color: #E65100 !important; box-shadow: 0 0 5px rgba(230, 81, 0, 0.5);}
+</style>
+""", unsafe_allow_html=True)
 
 # Rating filter with proper label
 min_rating = st.sidebar.slider(
@@ -626,12 +788,33 @@ min_rating = st.sidebar.slider(
     label_visibility="collapsed"
 )
 
-st.sidebar.markdown('</div>', unsafe_allow_html=True)
 filter_by_rating = min_rating > 0
 
-# Sort options in container
-st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
-st.sidebar.markdown("<h4>Sort By</h4>", unsafe_allow_html=True)
+# Sort options in container with sorting theme
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); 
+            border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #388E3C;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #1B5E20; 
+               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; 
+                     width: 24px; height: 24px; background-color: #388E3C; border-radius: 50%; 
+                     margin-right: 8px; color: white; font-size: 14px;">🔍</span>
+        Sort By
+    </h4>
+</div>
+""", unsafe_allow_html=True)
+
+# Custom CSS to make radio buttons more attractive
+st.markdown("""
+<style>
+    /* Radio button styling */
+    .st-cc, .st-cd, .st-ce {border-color: #388E3C !important;}
+    .st-cc, .st-cd, .st-ce {background-color: #C8E6C9 !important;}
+    .st-cc[aria-checked="true"], .st-cd[aria-checked="true"], .st-ce[aria-checked="true"] {border-color: #1B5E20 !important;}
+    .st-cc[aria-checked="true"], .st-cd[aria-checked="true"], .st-ce[aria-checked="true"] {background-color: #388E3C !important;}
+</style>
+""", unsafe_allow_html=True)
 
 # Sort options with proper label
 sort_options = ["Rating (High to Low)", "Price (Low to High)", "Price (High to Low)"]
@@ -641,8 +824,6 @@ sort_by = st.sidebar.radio(
     key="sort_radio",
     label_visibility="collapsed"
 )
-
-st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 # No need for sidebar recommendations selector
 
@@ -711,6 +892,56 @@ elif selected_country != 'All':
 
 # This subheader is now handled in the product display sections below
 
+# Function to add a product to the viewed products list
+def add_to_viewed_products(product_name):
+    # Only add if not already in the list
+    if product_name not in st.session_state['viewed_products']:
+        # Add to the beginning of the list (most recent first)
+        st.session_state['viewed_products'].insert(0, product_name)
+        # Keep only the 10 most recent views to avoid overwhelming the recommendations
+        if len(st.session_state['viewed_products']) > 10:
+            st.session_state['viewed_products'] = st.session_state['viewed_products'][:10]
+
+# Function to get personalized recommendations based on viewed products
+def get_personalized_recommendations(num_recommendations=6):
+    recommendations = []
+    # If the user has viewed products, get recommendations based on those
+    if st.session_state['viewed_products']:
+        # Use the three most recently viewed products for recommendations
+        recent_products = st.session_state['viewed_products'][:3]
+        
+        # Get recommendations for each recently viewed product
+        for product_name in recent_products:
+            similar_products = recommender.get_recommendations(product_name, n=3)
+            if similar_products:
+                for product in similar_products:
+                    # Check if this product is already in our recommendations
+                    if not any(rec['name'] == product['name'] for rec in recommendations):
+                        recommendations.append(product)
+                        if len(recommendations) >= num_recommendations:
+                            break
+            if len(recommendations) >= num_recommendations:
+                break
+    
+    # If we don't have enough recommendations yet (or no viewed products),
+    # add some top-rated products
+    if len(recommendations) < num_recommendations:
+        top_rated = df.sort_values(by='Rating', ascending=False).head(num_recommendations).reset_index(drop=True)
+        for i in range(min(len(top_rated), num_recommendations - len(recommendations))):
+            product = top_rated.iloc[i]
+            # Only add if not already in recommendations
+            if not any(rec['name'] == product['Product'] for rec in recommendations):
+                recommendations.append({
+                    'name': product['Product'],
+                    'category': product.get('Category', 'Unknown'),
+                    'price': product.get('Sales', 0),
+                    'similarity': 1.0,  # High similarity for top rated products
+                    'image_url': product.get('Product Image URL', ''),
+                    'rating': product.get('Rating', 0)
+                })
+    
+    return recommendations[:num_recommendations]
+
 # Function to display a row of products using Streamlit-friendly approach
 def display_product_row(products, start_idx, section_id='normal', count=3):
     # Check if we're past the end of the products list
@@ -767,9 +998,12 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
                 
                 # Make the entire product card clickable
                 if product_container.button('👆 Click for similar products', key=f"product_{section_id}_{start_idx}_{i}", use_container_width=True):
+                    # Add this product to viewed products for future recommendations
+                    add_to_viewed_products(product["Product"])
+                    # Set as selected product for immediate similar products display
                     st.session_state['selected_product'] = product["Product"]
                     # Force rerun to show similar products
-                    st.experimental_rerun()
+                    st.rerun()
                 
     return True
 
@@ -831,7 +1065,7 @@ def display_similar_products():
             # Add a button to clear selection
             if st.button("❌ Clear Selection", key="clear_selection"):
                 del st.session_state['selected_product']
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.info(f"No similar products found for {selected_product}")
 
@@ -1021,12 +1255,9 @@ if len(filtered_data) > 0:
                     accent_color = colors['accent']
                     st.markdown(f"<span style='color: {accent_color}; font-size: 14px;'>{product['category']}</span>", unsafe_allow_html=True)
                     
-                    # Similarity score
+                    # Similarity score inside the card (properly indented and formatted)
                     accent_color = colors['accent']
                     st.markdown(f"<span style='color: {accent_color}; font-weight: bold;'>Similarity: {product['similarity']:.2f}</span>", unsafe_allow_html=True)
-                # Similarity score
-                accent_color = colors['accent']
-                st.markdown(f"<span style='color: {accent_color}; font-weight: bold;'>Similarity: {product['similarity']:.2f}</span>", unsafe_allow_html=True)
                 
                 # Close the card container
                 st.markdown('</div>', unsafe_allow_html=True)
