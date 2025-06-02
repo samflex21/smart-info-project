@@ -8,13 +8,14 @@ import altair as alt
 
 # Import recommender - handle both module import approaches
 try:
-    from recommender import ProductRecommender  # When running from src directory
+    from recommender import ProductRecommender
+    import datetime  # When running from src directory
 except ModuleNotFoundError:
     from src.recommender import ProductRecommender  # When running as a module
 
 # Set page configuration
 st.set_page_config(
-    page_title="Smart Product Recommendations",
+    page_title="Smart Store Product Recommendations", 
     page_icon="🛍️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -44,7 +45,9 @@ st.markdown("""
     
     /* Headers */
     h1, h2, h3 {
-        color: var(--primary-color);
+        color: #3C5067;
+        font-family: 'Playfair Display', 'Georgia', serif;
+        font-weight: 600;
     }
     
     /* Metric cards */
@@ -181,14 +184,28 @@ st.markdown("""
         padding: 20px;
         border-radius: 10px;
         margin: 20px 0;
-        border-left: 4px solid #F39C12;
+        border-left: 4px solid #3C5067;
     }
     
     .recommended-title {
-        color: #F39C12;
+        color: #3C5067;
         font-size: 1.5em;
         margin-bottom: 15px;
         font-weight: bold;
+        font-family: 'Playfair Display', 'Georgia', serif;
+    }
+    
+    /* Category tags with matching colors */
+    .category-tag {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        color: #3C5067;
+        background-color: #F2ECE5;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
     }
     .price { color: #B12704; font-weight: bold; font-size: 1.2em; }
     .rating { color: #FFA41C; }
@@ -350,28 +367,73 @@ left_spacer, main_content = st.columns([0.07, 0.93])
 
 # Now all content goes into the main content column
 with main_content:
-    # Modern header with green gradient background
+    # Modern header with enhanced design
     st.markdown("""
-<div style="background: linear-gradient(90deg, #1E5631 0%, #0B3C1A 100%); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <span style="font-size: 30px; color: #E8F5E9; margin-right: 12px;">🛍️</span>
-    <span style="font-size: 24px; color: #FFFFFF; font-weight: 600;">S&N SMART STORE</span>
+<div style="background: linear-gradient(90deg, #000000 0%, #222222 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.8rem; text-align: center; box-shadow: 0 6px 12px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
+<div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #E8DCCB 0%, #D9CCBA 100%);"></div>
+    <span style="font-size: 34px; color: #F8F4FF; margin-right: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">🛍️</span>
+    <span style="font-size: 28px; color: #FFFFFF; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">S&N SMART STORE</span>
 </div>
 """, unsafe_allow_html=True)
 
 # Responsive design with cross-device compatibility
 st.markdown("""
 <style>
-    /* Modern green sidebar styling with fixed width */
+    /* Sandstone Beige gradient sidebar */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%);
-        border-right: 1px solid #A5D6A7;
+        background: linear-gradient(135deg, #F0E6D8 0%, #E8DCCB 50%, #D9CCBA 100%);
+        border-right: 1px solid #D9CCBA;
         min-width: 230px !important;
         max-width: 250px !important;
+        box-shadow: 2px 0px 5px rgba(0,0,0,0.1);
+        padding: 1rem 0.5rem !important;
+    }
+    
+    /* Make sidebar text dark blue for contrast on beige */
+    [data-testid="stSidebar"] .sidebar p, 
+    [data-testid="stSidebar"] .sidebar span, 
+    [data-testid="stSidebar"] .sidebar div, 
+    /* Radio button and checkbox styling */
+    .stRadio > div[role="radiogroup"] > label, .stCheckbox > label {
+        color: #3C5067 !important;
+        font-weight: 400 !important;
+    }
+    .stRadio > div[role="radiogroup"] > div[role="radio"], .stCheckbox [data-testid="stCheckbox"] {
+        border-color: #3C5067 !important;
+    }
+    [data-testid="stSidebar"] .stSubheader {
+        color: #3C5067 !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px;
+        font-family: 'Playfair Display', 'Georgia', serif;
+        border-bottom: 1px solid rgba(60, 80, 103, 0.2);
+        padding-bottom: 0.4rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Enhanced Sidebar Filters */
+    .sidebar-container {
+        background-color: white;
+        border-radius: 16px;
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(60, 80, 103, 0.08);
+    }
+    
+    /* Sidebar section headers */
+    .sidebar-container h4 {
+        color: #3C5067;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid #E8DCCB;
+        padding-bottom: 0.4rem;
+        font-family: 'Playfair Display', 'Georgia', serif;
     }
     
     /* Page background with responsive container */
     .main .block-container {
-        background-color: #F9FFF9;
+        background-color: #FFFFFF;
         max-width: 1200px;
         padding-top: 1rem;
         padding-right: 1rem;
@@ -403,20 +465,53 @@ st.markdown("""
     .sidebar .element-container {margin-bottom: 0.2rem !important;}
     
     /* Compact radio buttons with modern styling */
-    div.row-widget.stRadio > div {flex-direction: column; gap: 1px !important;}
-    .stRadio [data-testid="stMarkdownContainer"] p {font-size: 0.9rem; margin: 0 !important; padding: 0 !important; color: #2E7D32;}
+    div.row-widget.stRadio > div {flex-direction: column; gap: 3px !important;}
+    
+    /* Add smooth transitions to all interactive elements */
+    .stButton button, .stSelectbox, .stRadio, .stSlider, .stCheckbox, a {
+        transition: all 0.3s ease !important;
+    }
+    
+    /* Buttons */
+    button, .stButton>button, .stDownloadButton>button, .stButton>button:focus {
+        background-color: #3C5067 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 0.4rem 1.2rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        transition: all 0.3s ease !important;
+        width: 100%;
+    }
+    
+    button:hover, .stButton>button:hover, .stDownloadButton>button:hover {
+        background-color: #4D6A89 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        border-color: #3C5067;
+    }
+    
+    .stRadio [data-testid="stMarkdownContainer"] p {font-size: 0.9rem; margin: 0 !important; padding: 0 !important; color: #2E2E2E;}
     
     /* Enhance radio button styling */
-    .stRadio input[type='radio'] {accent-color: #2E7D32 !important;}
+    .stRadio input[type='radio'] {accent-color: #3C5067 !important;}
     
     /* Enhance slider styling */
-    .stSlider [data-baseweb="slider"] div {background-color: #2E7D32 !important;}
+    .stSlider [data-baseweb="slider"] div {background-color: #FFFFFF !important;}
     
     /* Compact header styling */
-    .sidebar .stSubheader {margin-top: 0.5rem !important; margin-bottom: 0.1rem !important; padding-bottom: 0 !important;}
+    .sidebar .stSubheader {margin-top: 0.8rem !important; margin-bottom: 0.3rem !important; padding-bottom: 0 !important; font-weight: 600 !important; letter-spacing: 0.4px !important;}
     
     /* Dividers match color scheme */
-    .sidebar hr {margin: 0.3rem 0 !important; border-color: #A5D6A7;}
+    .sidebar hr {margin: 0.3rem 0 !important; border-color: rgba(232, 220, 203, 0.6);}
     
     /* Make slider more compact */
     .stSlider {margin: 0.2rem 0 !important; padding: 0 !important;}
@@ -425,10 +520,10 @@ st.markdown("""
     .stSelectbox {margin: 0 !important; padding: 0 !important;}
     
     /* Selectbox styling */
-    .stSelectbox [data-baseweb="select"] {border-color: #2E7D32 !important;}
+    .stSelectbox [data-baseweb="select"] {border-color: #3C5067 !important;}
     
     /* Style all headers with the brand color */
-    h1, h2, h3, h4, h5 {color: #1E5631 !important;}
+    h1, h2, h3, h4, h5 {color: #3C5067 !important;}
     
     /* Media queries for different screen sizes */
     @media (max-width: 768px) {
@@ -449,10 +544,16 @@ st.markdown("""
     
     /* Create visual separation between sidebar and main content with a subtle divider */
     [data-testid="stSidebar"] {
-        border-right: 1px solid #C8E6C9;
+        border-right: 1px solid #3C5067;
         box-shadow: 2px 0px 5px rgba(0,0,0,0.05);
     }
-</style>
+    
+    /* Product grid with flexible sizing */
+    div.row-widget.stHorizontalBlock {
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        justify-content: flex-start;
+    }
 """, unsafe_allow_html=True)
 
 # Get all categories from the dataset
@@ -467,65 +568,81 @@ for cat in required_categories:
 # Create the full list with all required categories
 all_categories = ['All'] + sorted(set(all_category_values + required_categories))
 
-# Smaller sidebar title
-st.sidebar.markdown("<h3 style='margin: 0 0 0.3rem 0; padding:0; font-size:1.2rem;'>Filters</h3>", unsafe_allow_html=True)
+# Add an elegant title to the sidebar
+st.sidebar.markdown("<h3 style='margin: 0 0 1.2rem 0; padding:0; font-size:1.5rem; color:#3C5067; font-family:Playfair Display, Georgia, serif;'>✨ Filter Products</h3>", unsafe_allow_html=True)
 
-# More compact category header
-st.sidebar.markdown("<p style='margin:0.3rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Category</p>", unsafe_allow_html=True)
+# Category filter in container
+st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
+st.sidebar.markdown("<h4>Category</h4>", unsafe_allow_html=True)
 
 # Radio buttons for categories with proper accessibility
 selected_category = st.sidebar.radio(
     "Category options",
     all_categories,
-    index=0,  # Default to 'All'
     key="category_radio",
-    label_visibility="collapsed"
-)
+    label_visibility="collapsed")
 
-# Define category-based color schemes with green variants
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
+
+# Define category-based color schemes with lavender variants
 category_colors = {
-    'Body care': {'primary': '#C8E6C9', 'secondary': '#A5D6A7', 'accent': '#2E7D32'},
-    'Face care': {'primary': '#DCEDC8', 'secondary': '#C5E1A5', 'accent': '#558B2F'},
-    'Hair care': {'primary': '#E8F5E9', 'secondary': '#C8E6C9', 'accent': '#388E3C'},
-    'Home and Accessories': {'primary': '#F1F8E9', 'secondary': '#DCEDC8', 'accent': '#33691E'},
-    'Luxury Jewelry': {'primary': '#E0F2F1', 'secondary': '#B2DFDB', 'accent': '#00796B'},
-    'Make up': {'primary': '#E8F5E9', 'secondary': '#A5D6A7', 'accent': '#1B5E20'}
+    'Body care': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'},
+    'Face care': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'},
+    'Hair care': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'},
+    'Home and Accessories': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'},
+    'Luxury Jewelry': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'},
+    'Make up': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'}
 }
 
-# Compact country header
-st.sidebar.markdown("<p style='margin:0.3rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Country</p>", unsafe_allow_html=True)
+# Country filter in container
+st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
+st.sidebar.markdown("<h4>Country</h4>", unsafe_allow_html=True)
 
 # Get all countries from the dataset
 countries = ['All'] + sorted(df['Country'].unique().tolist())
+
+# Dropdown for countries with proper accessibility
 selected_country = st.sidebar.selectbox(
     "Choose a country",
     countries,
-    index=0,  # Default to 'All'
     key="country_select",
     label_visibility="collapsed"
 )
 
-# Compact divider and rating header
-st.sidebar.markdown("<hr style='margin:0.4rem 0 0.2rem 0; padding:0; border-color:#eee;'>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='margin:0.1rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Rating</p>", unsafe_allow_html=True)
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
+
+# Rating filter in container
+st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
+st.sidebar.markdown("<h4>Minimum Rating</h4>", unsafe_allow_html=True)
 
 # Rating filter with proper label
 min_rating = st.sidebar.slider(
     "Minimum star rating",
-    0.0, 5.0, 0.0, 0.5, 
+    min_value=0.0,
+    max_value=5.0,
+    value=4.0,
+    step=0.5,
     format="%.1f★",
-    key="rating_slider",
     label_visibility="collapsed"
 )
+
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
 filter_by_rating = min_rating > 0
 
-# Compact divider and sort header
-st.sidebar.markdown("<hr style='margin:0.4rem 0 0.2rem 0; padding:0; border-color:#eee;'>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='margin:0.1rem 0 0 0; padding:0; font-weight:bold; color:#444; font-size:0.9rem;'>Sort By</p>", unsafe_allow_html=True)
+# Sort options in container
+st.sidebar.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
+st.sidebar.markdown("<h4>Sort By</h4>", unsafe_allow_html=True)
 
 # Sort options with proper label
 sort_options = ["Rating (High to Low)", "Price (Low to High)", "Price (High to Low)"]
-sort_by = st.sidebar.radio("Sort options", sort_options, index=0, key="sort_radio", label_visibility="collapsed")
+sort_by = st.sidebar.radio(
+    "Sort options",
+    sort_options,
+    key="sort_radio",
+    label_visibility="collapsed"
+)
+
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 # No need for sidebar recommendations selector
 
@@ -533,16 +650,37 @@ sort_by = st.sidebar.radio("Sort options", sort_options, index=0, key="sort_radi
 filtered_data = df.copy()
 
 
-# Apply filters to the data - NO MOCK DATA, ONLY REAL PRODUCTS
+# Apply filters to the data with better handling for special categories
 if selected_category != 'All':
-    # Direct category filtering - no special cases, no mock products
+    # First try direct exact match filtering
     category_filter = filtered_data['Category'] == selected_category
-    filtered_data = filtered_data[category_filter]
+    exact_match_data = filtered_data[category_filter]
     
-    # Print debug info
+    # If no exact matches, try partial/contains matching for special categories
+    if len(exact_match_data) == 0 and selected_category in ['Luxury Jewelry', 'Body care', 'Face care', 'Hair care', 'Make up']:
+        # Try a more flexible match - contains or similar categories
+        if selected_category == 'Luxury Jewelry':
+            # Look for jewelry, accessories or luxury items
+            category_filter = filtered_data['Category'].str.contains('Jewelry|Accessories|Luxury', case=False)
+        elif 'care' in selected_category.lower():
+            # For care products, match anything with 'care' in it
+            search_term = selected_category.split()[0].lower() # 'Body', 'Face', 'Hair'
+            category_filter = filtered_data['Category'].str.contains(search_term, case=False)
+        elif selected_category == 'Make up':
+            # For makeup products
+            category_filter = filtered_data['Category'].str.contains('Make|Cosmetic|Beauty', case=False)
+            
+        filtered_data = filtered_data[category_filter]
+        if len(filtered_data) > 0:
+            st.info(f"Showing related products for '{selected_category}'")
+    else:
+        # Use the exact matches if available
+        filtered_data = exact_match_data
+    
+    # Debug info
     print(f"Filtered to {len(filtered_data)} products in category '{selected_category}'")
     
-    # If no products found, show a warning but don't add any mock data
+    # If still no products found, show a warning
     if len(filtered_data) == 0:
         st.warning(f"No products found in the '{selected_category}' category.")
         print(f"No products found in category: {selected_category}")
@@ -701,11 +839,12 @@ def display_similar_products():
 if len(filtered_data) > 0:
     # Show the top rated products section first
     st.markdown("""
-    <div style="margin-bottom: 1.5rem;">
-        <h2 style="color: #1E5631; margin-bottom: 0.5rem; font-weight: 600; letter-spacing: 0.5px;">
-            <span style="color: #F5B041; margin-right: 8px;">⭐</span> Top Rated Products
+    <div style="margin-bottom: 2rem; position: relative; padding-bottom: 0.8rem;">
+        <div style="position: absolute; bottom: 0; left: 0; width: 80px; height: 3px; background: #3C5067; border-radius: 2px;"></div>
+        <h2 style="color: #3C5067; margin-bottom: 0.6rem; font-weight: 700; letter-spacing: 0.5px; font-family: 'Playfair Display', 'Georgia', serif;">
+            <span style="color: #FFD700; margin-right: 10px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">⭐</span> Top Rated Products
         </h2>
-        <p style="color: #2E7D32; margin: 0; font-size: 1rem;">Products our customers love the most</p>
+        <p style="color: #2E2E2E; margin: 0; font-size: 1.05rem; font-weight: 400;">Products our customers love the most</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -727,14 +866,14 @@ if len(filtered_data) > 0:
             
             # Create a modern box for the product with green styling
             st.markdown(f"""
-            <div style='border: 1px solid #A5D6A7; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s, box-shadow 0.3s; height: 100%; background-color: white;'>
-                <div style='background: linear-gradient(45deg, {colors['primary']} 0%, {colors['secondary']} 100%); padding: 12px; position: relative;'>
-                    <h4 style='color: #1E5631; margin: 0; font-weight: 600; font-size: 16px;'>{product['Product']}</h4>
-                    <div style='position: absolute; top: 8px; right: 8px; background-color: rgba(255,255,255,0.9); border-radius: 4px; padding: 2px 6px;'>
-                        <span style='color: #1E5631; font-weight: bold;'>TOP RATED</span>
+            <div style='border: 1px solid #3C5067; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: all 0.4s ease; height: 100%; background-color: white; position: relative; cursor: pointer;' onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 20px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 10px rgba(0,0,0,0.08)'">
+                <div style='background: linear-gradient(45deg, {colors['primary']} 0%, {colors['secondary']} 100%); padding: 16px; position: relative;'>
+                    <h4 style='color: #3C5067; margin: 0; font-weight: 600; font-size: 16px;'>{product['Product']}</h4>
+                    <div style='position: absolute; top: 10px; right: 10px; background-color: rgba(255,255,255,0.95); border-radius: 20px; padding: 4px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                        <span style='color: #3C5067; font-weight: bold;'>TOP RATED</span>
                     </div>
                 </div>
-                <div style='padding: 15px;'>
+                <div style='padding: 20px;'>
             """, unsafe_allow_html=True)
             
             # Display the product image if available
@@ -746,12 +885,12 @@ if len(filtered_data) > 0:
                 <div style='background: linear-gradient(135deg, {colors['primary']} 0%, {colors['secondary']} 100%); 
                             height: 180px; display: flex; align-items: center; justify-content: center; 
                             margin-bottom: 15px; border-radius: 6px;'>
-                    <p style='color: #2A416A; text-align: center; font-weight: 500; font-size: 18px;'>{product['Category']}</p>
+                    <p style='color: #3C5067; text-align: center; font-weight: 500; font-size: 18px;'>{product['Category']}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
-            # Display price with currency sign using green styling
-            st.markdown(f"<h3 style='color: #1E5631; margin: 8px 0; font-weight: 700;'>${product['Sales']:.2f}</h3>", unsafe_allow_html=True)
+            # Display price with currency sign using muted rose pink styling
+            st.markdown(f"<h3 style='color: #3C5067; margin: 8px 0; font-weight: 700;'>${product['Sales']:.2f}</h3>", unsafe_allow_html=True)
             
             # Display rating as stars
             rating_stars = "⭐" * int(product['Rating'])
@@ -896,3 +1035,11 @@ if len(filtered_data) > 0:
         st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("No similar products found.")
+
+# Add a footer
+st.markdown("""
+<div style="margin-top: 4rem; padding: 1.5rem; text-align: center; border-top: 1px solid #E8DCCB; color: #3C5067;">
+    <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">&copy; 2025 S&N Smart Store &mdash; All Rights Reserved</p>
+    <p style="font-size: 0.8rem; color: #666;">Last updated: {}</p>
+</div>
+""".format(datetime.datetime.now().strftime("%B %d, %Y")), unsafe_allow_html=True)
