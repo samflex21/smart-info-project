@@ -412,8 +412,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Create 7% spacing and 93% content columns for layout
-left_spacer, main_content = st.columns([0.07, 0.93])
+# Create 2% spacing and 98% content columns for layout
+left_spacer, main_content = st.columns([0.02, 0.98])
 
 # Initialize session state for viewed products if it doesn't exist
 if 'viewed_products' not in st.session_state:
@@ -680,31 +680,48 @@ for cat in required_categories:
 all_categories = ['All'] + sorted(set(all_category_values + required_categories))
 
 # Add an elegant title to the sidebar
-# Add an elegant title with animated icon to the sidebar
-st.sidebar.markdown("""
-<div style="margin: 0 0 1.5rem 0; padding: 0.8rem; background: linear-gradient(135deg, #3C5067 0%, #4A6B8A 100%); 
-            border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; position: relative; overflow: hidden;">
+# Define a unified premium color scheme for all filter sections with lighter blue
+filter_colors = {
+    'primary': '#5A7CA0',            # Lighter slate blue - primary brand color
+    'secondary': '#6B8CAD',          # Medium slate blue - secondary brand color
+    'accent': '#C36A2D',             # Terracotta - accent color
+    'light_primary': '#7B99B9',      # Lighter version of primary for gradients
+    'lightest_primary': '#9DB6D0',   # Lightest version of primary for gradients
+    'dark_bg': '#3A5978',            # Dark slate - dark background
+    'text_light': '#FFFFFF',         # White - light text for all elements
+    'text_dark': '#FFFFFF',          # White text for all elements
+    'border': '#3A5978',             # Dark blue border
+    'highlight': '#C36A2D'           # Highlight color
+}
+
+# Add an elegant title with animated icon to the sidebar with gradient from lighter to darker blue
+st.sidebar.markdown(f"""
+<div style="margin: 0 0 1.5rem 0; padding: 0.8rem; 
+            background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
+            border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); 
+            text-align: center; position: relative; overflow: hidden;">
     <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; 
                background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
     <div style="position: absolute; bottom: -15px; left: -15px; width: 50px; height: 50px; 
                background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
-    <h3 style="margin: 0; padding:0; font-size:1.5rem; color:#FFFFFF; font-family:'Playfair Display', Georgia, serif; 
-               text-shadow: 0 2px 4px rgba(0,0,0,0.2); position: relative; z-index: 1;">
+    <h3 style="margin: 0; padding:0; font-size:1.5rem; color:{filter_colors['text_light']}; 
+               font-family:'Playfair Display', Georgia, serif; 
+               text-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative; z-index: 1;">
         <span style="margin-right: 8px;">✨</span> Filter Products
     </h3>
 </div>
 """, unsafe_allow_html=True)
 
-# Category filter in container with distinct styling
-st.sidebar.markdown("""
-<div style="background: linear-gradient(135deg, #F0E6D8 0%, #E8DCCB 100%); 
+# Category filter in container with gradient from lighter to darker blue
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
             border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #3C5067;">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #3C5067; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: #3C5067; border-radius: 50%; 
-                     margin-right: 8px; color: white; font-size: 14px;">🏷️</span>
+                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
+                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">🏷️</span>
         Category
     </h4>
 </div>
@@ -727,16 +744,16 @@ category_colors = {
     'Make up': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'}
 }
 
-# Country filter in container with global map theme
-st.sidebar.markdown("""
-<div style="background: linear-gradient(135deg, #E8F4F8 0%, #D1E5ED 100%); 
+# Country filter in container with gradient from lighter to darker blue
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
             border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #4A90E2;">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #2C3E50; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: #4A90E2; border-radius: 50%; 
-                     margin-right: 8px; color: white; font-size: 14px;">🌎</span>
+                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
+                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">🌎</span>
         Country
     </h4>
 </div>
@@ -753,27 +770,27 @@ selected_country = st.sidebar.selectbox(
     label_visibility="collapsed"
 )
 
-# Rating filter in container with star theme
-st.sidebar.markdown("""
-<div style="background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); 
+# Rating filter in container with gradient from lighter to darker blue
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
             border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #FFA000;">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #E65100; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: #FFA000; border-radius: 50%; 
-                     margin-right: 8px; color: white; font-size: 14px;">⭐</span>
+                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
+                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">⭐</span>
         Minimum Rating
     </h4>
 </div>
 """, unsafe_allow_html=True)
 
-# Custom CSS to style the rating slider
-st.markdown("""
+# Custom CSS to style the rating slider with unified color scheme
+st.markdown(f"""
 <style>
     /* Rating slider styling */
-    [data-testid="stSlider"] > div > div > div > div {background-color: #FFA000 !important;}
-    [data-testid="stSlider"] > div > div > div > div > div > div {background-color: #E65100 !important; box-shadow: 0 0 5px rgba(230, 81, 0, 0.5);}
+    [data-testid="stSlider"] > div > div > div > div {{background-color: {filter_colors['primary']} !important;}}
+    [data-testid="stSlider"] > div > div > div > div > div > div {{background-color: {filter_colors['accent']} !important; box-shadow: 0 0 5px rgba(195, 106, 45, 0.5);}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -790,29 +807,36 @@ min_rating = st.sidebar.slider(
 
 filter_by_rating = min_rating > 0
 
-# Sort options in container with sorting theme
-st.sidebar.markdown("""
-<div style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); 
+# Sort options in container with gradient from lighter to darker blue
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
             border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #388E3C;">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #1B5E20; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
                font-family: 'Playfair Display', serif; display: flex; align-items: center;">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: #388E3C; border-radius: 50%; 
-                     margin-right: 8px; color: white; font-size: 14px;">🔍</span>
+                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
+                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">🔍</span>
         Sort By
     </h4>
 </div>
 """, unsafe_allow_html=True)
 
-# Custom CSS to make radio buttons more attractive
-st.markdown("""
+# Custom CSS to make radio buttons match deep slate blue theme
+st.markdown(f"""
 <style>
     /* Radio button styling */
-    .st-cc, .st-cd, .st-ce {border-color: #388E3C !important;}
-    .st-cc, .st-cd, .st-ce {background-color: #C8E6C9 !important;}
-    .st-cc[aria-checked="true"], .st-cd[aria-checked="true"], .st-ce[aria-checked="true"] {border-color: #1B5E20 !important;}
-    .st-cc[aria-checked="true"], .st-cd[aria-checked="true"], .st-ce[aria-checked="true"] {background-color: #388E3C !important;}
+    .st-cc, .st-cd, .st-ce {{border-color: {filter_colors['primary']} !important;}}
+    .st-cc, .st-cd, .st-ce {{background-color: {filter_colors['lightest_primary']} !important;}}
+    .st-cc[aria-checked="true"], .st-cd[aria-checked="true"], .st-ce[aria-checked="true"] {{border-color: {filter_colors['dark_bg']} !important;}}
+    .st-cc[aria-checked="true"], .st-cd[aria-checked="true"], .st-ce[aria-checked="true"] {{background-color: {filter_colors['primary']} !important;}}
+    
+    /* Text color for sidebar options */
+    .st-bq {{color: {filter_colors['text_light']} !important;}}
+    
+    /* Also update the slider handle */
+    [data-testid="stSlider"] > div > div > div > div {{background-color: {filter_colors['lightest_primary']} !important;}}
+    [data-testid="stSlider"] > div > div > div > div > div > div {{background-color: {filter_colors['text_light']} !important; box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);}}
 </style>
 """, unsafe_allow_html=True)
 
