@@ -458,8 +458,15 @@ with main_content:
     st.markdown("""
 <div style="background: linear-gradient(90deg, #192633 0%, #233547 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.8rem; text-align: center; box-shadow: 0 6px 12px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #E8DCCB 0%, #D9CCBA 100%);"></div>
-    <span style="font-size: 34px; color: #F8F4FF; margin-right: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">🛒</span>
-    <span style="font-size: 28px; color: #FFFFFF; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">S&N SMART STORE</span>
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <div style="width: 50px; height: 50px; background-color: #E8DCCB; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 15px; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            <span style="color: #192633; font-weight: bold; font-size: 22px; font-family: 'Playfair Display', serif;">S&N</span>
+            <div style="position: absolute; top: -5px; right: -5px; background-color: #192633; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                <span style="color: #FFFFFF; font-size: 10px; font-weight: bold;">⭐</span>
+            </div>
+        </div>
+        <span style="font-size: 28px; color: #FFFFFF; font-weight: 700; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-family: 'Playfair Display', serif;">S&N <span style="font-size: 16px; letter-spacing: 3px; font-weight: 400;">SMART STORE</span></span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
     
@@ -515,7 +522,7 @@ with main_content:
                         # Set as selected product
                         st.session_state['selected_product'] = product['name']
                         # Force rerun
-                        st.rerun()
+                        st.experimental_rerun()
             
             # Close the recommendation container
             st.markdown("</div></div>", unsafe_allow_html=True)
@@ -1120,7 +1127,7 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
                     # Set as selected product for immediate similar products display
                     st.session_state['selected_product'] = product["Product"]
                     # Force rerun to show similar products
-                    st.rerun()
+                    st.experimental_rerun()
                 
     return True
 
@@ -1182,7 +1189,7 @@ def display_similar_products():
             # Add a button to clear selection
             if st.button("❌ Clear Selection", key="clear_selection"):
                 del st.session_state['selected_product']
-                st.rerun()
+                st.experimental_rerun()
         else:
             st.info(f"No similar products found for {selected_product}")
 
