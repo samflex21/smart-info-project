@@ -476,7 +476,7 @@ with main_content:
                     """, unsafe_allow_html=True)
                     
                     # Add a view button that will track the product view
-                    if st.button(f"View Details", key=f"rec_{i}"):
+                    if st.button(f"See Similar Products", key=f"rec_{i}"):
                         # Add to viewed products
                         add_to_viewed_products(product['name'])
                         # Set as selected product
@@ -1080,8 +1080,8 @@ def display_product_row(products, start_idx, section_id='normal', count=3):
                 # Close card container
                 st.markdown('</div>', unsafe_allow_html=True)
                 
-                # Make the entire product card clickable
-                if product_container.button('👆 Click for similar products', key=f"product_{section_id}_{start_idx}_{i}", use_container_width=True):
+                # Make the entire product card clickable with elegant styling
+                if product_container.button('Similar Products', key=f"product_{section_id}_{start_idx}_{i}", use_container_width=True):
                     # Add this product to viewed products for future recommendations
                     add_to_viewed_products(product["Product"])
                     # Set as selected product for immediate similar products display
