@@ -323,11 +323,22 @@ if recommender is None:
 df = recommender.data
 
 # Clean up any rows with missing values
-df['Rating'] = df['Rating'].fillna(0)
-df['Sales'] = df['Sales'].fillna(0)
-df['Category'] = df['Category'].fillna('Uncategorized')
-df['Product'] = df['Product'].fillna('Unnamed Product')
-df['Country'] = df['Country'].fillna('Unknown')
+try:
+    df['Rating'] = df['Rating'].fillna(0)
+    df['Sales'] = df['Sales'].fillna(0)
+    df['Category'] = df['Category'].fillna('Uncategorized')
+    df['Product'] = df['Product'].fillna('Unnamed Product')
+    
+    # Check if Country column exists before filling NA values
+    if 'Country' in df.columns:
+        df['Country'] = df['Country'].fillna('Unknown')
+    else:
+        # If Country column doesn't exist, create it with default value
+        df['Country'] = 'Global'  # Set a default value for all products
+        print("Note: Country column was missing and has been added with default value 'Global'")
+except Exception as e:
+    print(f"Error during data cleanup: {e}")
+    # Continue with available columns
 
 # Print information about each category
 categories_count = df.groupby('Category').size().reset_index(name='count')
@@ -408,6 +419,28 @@ st.markdown("""
     /* Product cards get subtle spacing */
     .product-card {
         margin-left: 0rem !important;
+    }
+    
+    /* Stronger selectors to force white text for sidebar headers */
+    [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] h4,
+    [data-testid="stSidebar"] .stMarkdown h3,
+    [data-testid="stSidebar"] .stMarkdown h4,
+    [data-testid="stSidebar"] div h3,
+    [data-testid="stSidebar"] div h4 {
+        color: #FFFFFF !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+        font-weight: bold !important;
+    }
+    
+    /* Override all inline styles for filter headers */
+    [data-testid="stSidebar"] [style*="color:"] {
+        color: #FFFFFF !important;
+    }
+    
+    /* Make sidebar background deeper blue */
+    [data-testid="stSidebar"] .stMarkdown div {
+        background: linear-gradient(135deg, #192633 0%, #233547 100%) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -688,40 +721,40 @@ filter_colors = {
     'light_primary': '#7B99B9',      # Lighter version of primary for gradients
     'lightest_primary': '#9DB6D0',   # Lightest version of primary for gradients
     'dark_bg': '#3A5978',            # Dark slate - dark background
-    'text_light': '#FFFFFF',         # White - light text for all elements
-    'text_dark': '#FFFFFF',          # White text for all elements
+    'text_light': '#071D36',         # Deep dark blue for sidebar filter headers
+    'text_dark': '#FFFFFF',          # White text for dark backgrounds
     'border': '#3A5978',             # Dark blue border
     'highlight': '#C36A2D'           # Highlight color
 }
 
 # Add an elegant title with animated icon to the sidebar with gradient from lighter to darker blue
-st.sidebar.markdown(f"""
+st.sidebar.markdown("""
 <div style="margin: 0 0 1.5rem 0; padding: 0.8rem; 
-            background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
+            background: linear-gradient(135deg, #192633 0%, #233547 100%); 
             border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); 
             text-align: center; position: relative; overflow: hidden;">
     <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; 
                background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
     <div style="position: absolute; bottom: -15px; left: -15px; width: 50px; height: 50px; 
                background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
-    <h3 style="margin: 0; padding:0; font-size:1.5rem; color:{filter_colors['text_light']}; 
-               font-family:'Playfair Display', Georgia, serif; 
-               text-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative; z-index: 1;">
+    <h3 style="margin: 0; padding:0; font-size:1.5rem; color:#FFFFFF !important; 
+                font-family:'Playfair Display', Georgia, serif; font-weight: bold;
+                position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
         <span style="margin-right: 8px;">✨</span> Filter Products
     </h3>
 </div>
 """, unsafe_allow_html=True)
 
-# Category filter in container with gradient from lighter to darker blue
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
+# Category filter in container with dark blue background
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #192633 0%, #233547 100%); 
             border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
-               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid #192633;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #FFFFFF !important; 
+               font-family: 'Playfair Display', serif; font-weight: bold; display: flex; align-items: center; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
-                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">🏷️</span>
+                     width: 24px; height: 24px; background-color: #3A5978; border-radius: 50%; 
+                     margin-right: 8px; color: #FFFFFF !important; font-size: 14px;">🏷️</span>
         Category
     </h4>
 </div>
@@ -744,16 +777,16 @@ category_colors = {
     'Make up': {'primary': '#FFFFFF', 'secondary': '#E8DCCB', 'accent': '#3C5067'}
 }
 
-# Country filter in container with gradient from lighter to darker blue
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
+# Country filter in container with dark blue background
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #192633 0%, #233547 100%); 
             border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
-               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid #192633;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #FFFFFF !important; 
+               font-family: 'Playfair Display', serif; font-weight: bold; display: flex; align-items: center; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
-                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">🌎</span>
+                     width: 24px; height: 24px; background-color: #3A5978; border-radius: 50%; 
+                     margin-right: 8px; color: #FFFFFF !important; font-size: 14px;">🌎</span>
         Country
     </h4>
 </div>
@@ -770,16 +803,16 @@ selected_country = st.sidebar.selectbox(
     label_visibility="collapsed"
 )
 
-# Rating filter in container with gradient from lighter to darker blue
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
+# Minimum rating filter
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #192633 0%, #233547 100%); 
             border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
-               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid #192633;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #FFFFFF !important; 
+               font-family: 'Playfair Display', serif; font-weight: bold; display: flex; align-items: center; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
-                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">⭐</span>
+                     width: 24px; height: 24px; background-color: #3A5978; border-radius: 50%; 
+                     margin-right: 8px; color: #FFFFFF !important; font-size: 14px;">⭐</span>
         Minimum Rating
     </h4>
 </div>
@@ -807,16 +840,16 @@ min_rating = st.sidebar.slider(
 
 filter_by_rating = min_rating > 0
 
-# Sort options in container with gradient from lighter to darker blue
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {filter_colors['lightest_primary']} 0%, {filter_colors['dark_bg']} 100%); 
+# Sort filter in container with dark blue background
+st.sidebar.markdown("""
+<div style="background: linear-gradient(135deg, #192633 0%, #233547 100%); 
             border-radius: 18px; padding: 1rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid {filter_colors['dark_bg']};">
-    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: {filter_colors['text_light']}; 
-               font-family: 'Playfair Display', serif; display: flex; align-items: center;">
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); border-left: 4px solid #192633;">
+    <h4 style="margin-top: 0; margin-bottom: 0.8rem; color: #FFFFFF !important; 
+               font-family: 'Playfair Display', serif; font-weight: bold; display: flex; align-items: center; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
         <span style="display: inline-flex; align-items: center; justify-content: center; 
-                     width: 24px; height: 24px; background-color: {filter_colors['dark_bg']}; border-radius: 50%; 
-                     margin-right: 8px; color: {filter_colors['text_light']}; font-size: 14px;">🔍</span>
+                     width: 24px; height: 24px; background-color: #3A5978; border-radius: 50%; 
+                     margin-right: 8px; color: #FFFFFF !important; font-size: 14px;">🔍</span>
         Sort By
     </h4>
 </div>
