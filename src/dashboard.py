@@ -459,13 +459,7 @@ with main_content:
 <div style="background: linear-gradient(90deg, #192633 0%, #233547 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.8rem; text-align: center; box-shadow: 0 6px 12px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #E8DCCB 0%, #D9CCBA 100%);"></div>
     <div style="display: flex; justify-content: center; align-items: center;">
-        <div style="width: 50px; height: 50px; background-color: #E8DCCB; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 15px; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            <span style="color: #192633; font-weight: bold; font-size: 22px; font-family: 'Playfair Display', serif;">S&N</span>
-            <div style="position: absolute; top: -5px; right: -5px; background-color: #192633; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                <span style="color: #FFFFFF; font-size: 10px; font-weight: bold;">⭐</span>
-            </div>
-        </div>
-        <span style="font-size: 28px; color: #FFFFFF; font-weight: 700; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-family: 'Playfair Display', serif;">S&N <span style="font-size: 16px; letter-spacing: 3px; font-weight: 400;">SMART STORE</span></span>
+        <span style="font-size: 32px; color: #FFFFFF; font-weight: 700; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.15); font-family: 'Playfair Display', serif;">S&N <span style="font-size: 18px; letter-spacing: 3px; font-weight: 400;">SMART STORE</span></span>
     </div>
 </div>
 """, unsafe_allow_html=True)
